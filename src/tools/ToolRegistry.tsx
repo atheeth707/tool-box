@@ -123,7 +123,7 @@ import TextGlitch from './TextGlitch';
 import EmojiCombiner from './EmojiCombiner';
 import AsciiBanner from './AsciiBanner';
 import ComingSoon from './ComingSoon';
-
+import ImageToPdf from './ImageToPdf';
 export const ToolComponents: Record<string, React.FC> = {
   'password-generator': PasswordGenerator,
   'word-counter': WordCounter,
@@ -259,6 +259,7 @@ export const ToolComponents: Record<string, React.FC> = {
   'text-glitch': TextGlitch,
   'emoji-combiner': EmojiCombiner,
   'ascii-banner': AsciiBanner,
+'image-to-pdf': ImageToPdf,
 };
 
 export const getToolComponent = (id: string) => {
