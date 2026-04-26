@@ -1,3 +1,4 @@
+import AIContentTools from './AIContentTools'
 import AIVideoTools from './AIVideoTools';
 import AIWebsiteTools from './AIWebsiteTools';
 import AIImageTools from './AIImageTools';
@@ -292,6 +293,7 @@ export const ToolComponents: Record<string, React.FC> = {
 'ai-image-tools': AIImageTools,
 'ai-video-tools': AIVideoTools,
 'ai-website-tools': AIWebsiteTools,
+'ai-content-tools': AIContentTools,
 };
 
 export const getToolComponent = (id: string) => {
