@@ -1,3 +1,16 @@
+import ReactionTest from './ReactionTest';
+import TypingTest from './TypingTest';
+import CPSCounter from './CPSCounter';
+import MemoryMatch from './MemoryMatch';
+import NumberGuess from './NumberGuess';
+import RockPaperScissors from './RockPaperScissors';
+import Quiz from './Quiz';
+import SpinWheel from './SpinWheel';
+import Challenges from './Challenges';
+import TruthDare from './TruthDare';
+import BrowserInfo from './BrowserInfo';
+import SpeedTest from './SpeedTest';
+import PingTool from './PingTool';
 import Base64FileDecoder from './Base64FileDecoder';
 import BackgroundRemover from './BackgroundRemover';
 import PasswordGenerator from './PasswordGenerator';
@@ -260,6 +273,19 @@ export const ToolComponents: Record<string, React.FC> = {
   'emoji-combiner': EmojiCombiner,
   'ascii-banner': AsciiBanner,
 'image-to-pdf': ImageToPdf,
+'reaction-test': ReactionTest,
+'typing-test': TypingTest,
+'cps-counter': CPSCounter,
+'memory-match': MemoryMatch,
+'number-guess': NumberGuess,
+'rock-paper-scissors': RockPaperScissors,
+'quiz': Quiz,
+'spin-wheel': SpinWheel,
+'challenges': Challenges,
+'truth-dare': TruthDare,
+'browser-info': BrowserInfo,
+'speed-test': SpeedTest,
+'ping-tool': PingTool,
 };
 
 export const getToolComponent = (id: string) => {
