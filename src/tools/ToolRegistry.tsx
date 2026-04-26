@@ -1,3 +1,5 @@
+import AIVideoTools from './AIVideoTools';
+import AIWebsiteTools from './AIWebsiteTools';
 import AIImageTools from './AIImageTools';
 import ReactionTest from './ReactionTest';
 import TypingTest from './TypingTest';
@@ -288,6 +290,8 @@ export const ToolComponents: Record<string, React.FC> = {
 'speed-test': SpeedTest,
 'ping-tool': PingTool,
 'ai-image-tools': AIImageTools,
+'ai-video-tools': AIVideoTools,
+'ai-website-tools': AIWebsiteTools,
 };
 
 export const getToolComponent = (id: string) => {
