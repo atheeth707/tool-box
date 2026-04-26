@@ -1,9 +1,9 @@
-
+import AIToolsPage from './AIToolsPage';
 import ReactionTest from './ReactionTest';
 import TypingTest from './TypingTest';
 import CPSCounter from './CPSCounter';
 import MemoryMatch from './MemoryMatch';
-import NumberGuess/NumberGuess';
+import NumberGuess from './NumberGuess';
 import RockPaperScissors from './RockPaperScissors';
 import Quiz from './Quiz';
 import SpinWheel from './SpinWheel';
@@ -287,6 +287,7 @@ export const ToolComponents: Record<string, React.FC> = {
 'browser-info': BrowserInfo,
 'speed-test': SpeedTest,
 'ping-tool': PingTool,
+'ai-tools': AIToolsPage,
 };
 
 export const getToolComponent = (id: string) => {
