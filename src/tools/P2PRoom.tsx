@@ -124,7 +124,7 @@ export default function P2PRoom({ defaultTab = 'connect' }) {
     setIsHost(true);
     setStatus('connecting');
 
-    const channel = supabase.channel(p2p-${id});
+    const channel = supabase.channel(`p2p-${id}`);
     channelRef.current = channel;
 
     channel.on('broadcast', { event: 'signal' }, async ({ payload }: any) => {
@@ -154,7 +154,7 @@ export default function P2PRoom({ defaultTab = 'connect' }) {
     setIsHost(false);
     setStatus('connecting');
 
-    const channel = supabase.channel(p2p-${roomId});
+    const channel = supabase.channel(`p2p-${roomId}`);
     channelRef.current = channel;
 
     channel.on('broadcast', { event: 'signal' }, async ({ payload }: any) => {
@@ -296,7 +296,7 @@ export default function P2PRoom({ defaultTab = 'connect' }) {
       {/* Tabs */}
       <div className="flex space-x-2 mb-6 overflow-x-auto pb-2">
         {['connect', 'chat', 'files', 'security'].map(t => (
-          <button key={t} onClick={() => setTab(t)} className={px-6 py-3 rounded-xl font-bold capitalize transition-colors whitespace-nowrap ${tab === t ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm border border-gray-100 dark:border-gray-700'}}>
+          <button key={t} onClick={() => setTab(t)} className={`px-6 py-3 rounded-xl font-bold capitalize transition-colors whitespace-nowrap ${tab === t ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm border border-gray-100 dark:border-gray-700'}`}>
             {t}
           </button>
         ))}
@@ -330,7 +330,7 @@ export default function P2PRoom({ defaultTab = 'connect' }) {
                   <div className="text-sm font-bold text-blue-800 dark:text-blue-300 uppercase">Your Room Code</div>
                   <div className="text-5xl font-black text-blue-600 dark:text-blue-400 font-mono tracking-widest">{roomId}</div>
                   <div className="bg-white p-4 rounded-xl shadow-sm">
-                    <img src={https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(window.location.origin + '/tool/secure-room-join?room=' + roomId)}} alt="QR Code" className="w-32 h-32" />
+                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(window.location.origin + '/tool/secure-room-join?room=' + roomId)}`} alt="QR Code" className="w-32 h-32" />
                   </div>
                   <p className="text-xs text-blue-600/70 dark:text-blue-400/70">Scan to join on mobile</p>
                 </div>
@@ -348,10 +348,10 @@ export default function P2PRoom({ defaultTab = 'connect' }) {
                 </div>
               ) : (
                 messages.map((m, i) => (
-                  <div key={i} className={flex ${m.isSender ? 'justify-end' : 'justify-start'}}>
-                    <div className={max-w-[70%] p-4 rounded-2xl ${m.isSender ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 dark:text-white rounded-bl-none'}}>
+                  <div key={i} className={`flex ${m.isSender ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[70%] p-4 rounded-2xl ${m.isSender ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 dark:text-white rounded-bl-none'}`}>
                       <div className="break-words">{m.text}</div>
-                      <div className={text-[10px] mt-2 font-bold ${m.isSender ? 'text-blue-200' : 'text-gray-400'}}>{m.time}</div>
+                      <div className={`text-[10px] mt-2 font-bold ${m.isSender ? 'text-blue-200' : 'text-gray-400'}`}>{m.time}</div>
                     </div>
                   </div>
                 ))
@@ -380,9 +380,9 @@ export default function P2PRoom({ defaultTab = 'connect' }) {
 
         {tab === 'files' && (
           <div className="space-y-8">
-            <label className={flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-3xl cursor-pointer transition-all ${status === 'connected' ? 'border-blue-300 bg-blue-50/50 dark:bg-blue-900/10 hover:bg-blue-50' : 'border-gray-300 bg-gray-50 dark:bg-gray-900 opacity-50 cursor-not-allowed'}}>
-              <FileUp className={w-10 h-10 mb-3 ${status === 'connected' ? 'text-blue-500' : 'text-gray-400'}} />
-              <span className={font-bold ${status === 'connected' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500'}}>
+            <label className={`flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-3xl cursor-pointer transition-all ${status === 'connected' ? 'border-blue-300 bg-blue-50/50 dark:bg-blue-900/10 hover:bg-blue-50' : 'border-gray-300 bg-gray-50 dark:bg-gray-900 opacity-50 cursor-not-allowed'}`}>
+              <FileUp className={`w-10 h-10 mb-3 ${status === 'connected' ? 'text-blue-500' : 'text-gray-400'}`} />
+              <span className={`font-bold ${status === 'connected' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500'}`}>
                 {status === 'connected' ? 'Click or Drag & Drop to Send File' : 'Connect to a room to send files'}
               </span>
               <input type="file" className="hidden" disabled={status !== 'connected'} onChange={handleFileUpload} />
@@ -395,7 +395,7 @@ export default function P2PRoom({ defaultTab = 'connect' }) {
                   <span>{uploadProgress > 0 ? uploadProgress : downloadProgress}%</span>
                 </div>
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-                  <div className="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style={{ width: ${uploadProgress || downloadProgress}% }}></div>
+                  <div className="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style={{ width: `${uploadProgress || downloadProgress}%` }}></div>
                 </div>
               </div>
             )}
