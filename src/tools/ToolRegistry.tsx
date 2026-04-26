@@ -1,3 +1,4 @@
+import AIToolsPage from "./tools/AIToolsPage";
 import ReactionTest from './ReactionTest';
 import TypingTest from './TypingTest';
 import CPSCounter from './CPSCounter';
