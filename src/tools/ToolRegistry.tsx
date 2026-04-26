@@ -1,9 +1,9 @@
-import AIToolsPage from "./AIToolsPage";
+
 import ReactionTest from './ReactionTest';
 import TypingTest from './TypingTest';
 import CPSCounter from './CPSCounter';
 import MemoryMatch from './MemoryMatch';
-import NumberGuess from './NumberGuess';
+import NumberGuess/NumberGuess';
 import RockPaperScissors from './RockPaperScissors';
 import Quiz from './Quiz';
 import SpinWheel from './SpinWheel';
