@@ -234,6 +234,28 @@ export const ToolComponents: Record<string, React.FC> = {
   'number-formatter': NumberFormatter,
   'file-size-converter': FileSizeConverter,
   'text-table-generator': TextTableGenerator,
+
+  // ✅ ADDED — these were imported but missing from the map
+  'invoice-generator': InvoiceGenerator,
+  'resume-builder': ResumeBuilder,
+  'notes-app': NotesApp,
+  'todo-list': TodoList,
+  'habit-tracker': HabitTracker,
+  'meeting-timer': MeetingTimer,
+  'daily-planner': DailyPlanner,
+  'text-notepad': TextNotepad,
+  'clipboard-manager': ClipboardManager,
+  'goal-tracker': GoalTracker,
+  'yt-title-generator': YtTitleGenerator,
+  'hashtag-generator': HashtagGenerator,
+  'random-story-generator': RandomStoryGenerator,
+  'fake-chat-generator': FakeChatGenerator,
+  'thumbnail-preview': ThumbnailPreview,
+  'caption-formatter': CaptionFormatter,
+  'font-style-generator': FontStyleGenerator,
+  'text-glitch': TextGlitch,
+  'emoji-combiner': EmojiCombiner,
+  'ascii-banner': AsciiBanner,
 };
 
 export const getToolComponent = (id: string) => {
