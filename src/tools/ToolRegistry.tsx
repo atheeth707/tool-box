@@ -1,3 +1,5 @@
+import Base64FileDecoder from './Base64FileDecoder';
+import BackgroundRemover from './BackgroundRemover';
 import PasswordGenerator from './PasswordGenerator';
 import WordCounter from './WordCounter';
 import Base64Encoder from './Base64Encoder';
@@ -234,7 +236,8 @@ export const ToolComponents: Record<string, React.FC> = {
   'number-formatter': NumberFormatter,
   'file-size-converter': FileSizeConverter,
   'text-table-generator': TextTableGenerator,
-
+'base64-file-decoder': Base64FileDecoder,
+'background-remover': BackgroundRemover,
   // ✅ ADDED — these were imported but missing from the map
   'invoice-generator': InvoiceGenerator,
   'resume-builder': ResumeBuilder,
