@@ -1,4 +1,4 @@
-import AIToolsPage from './AIToolsPage';
+
 import ReactionTest from './ReactionTest';
 import TypingTest from './TypingTest';
 import CPSCounter from './CPSCounter';
@@ -287,7 +287,7 @@ export const ToolComponents: Record<string, React.FC> = {
 'browser-info': BrowserInfo,
 'speed-test': SpeedTest,
 'ping-tool': PingTool,
-'ai-tools': AIToolsPage,
+
 };
 
 export const getToolComponent = (id: string) => {
