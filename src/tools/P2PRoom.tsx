@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { Shield, Wifi, WifiOff, FileUp, Send, Copy, QrCode, Lock, Clipboard, Download, Image as ImageIcon } from 'lucide-react';
+import { Shield, Wifi, WifiOff, FileUp, Send, QrCode, Lock, Clipboard, Download, Image as ImageIcon } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 
 const CHUNK_SIZE = 16384;
@@ -34,36 +34,47 @@ export default function P2PRoom({ defaultTab = 'connect' }) {
   const incomingSizeRef = useRef(0);
 
   useEffect(() => {
+    // SECURITY NOTE: In production, use VITE_ environment variables 
+    // rather than a public /api/env endpoint if possible.
     fetch('/api/env').then(r => r.json()).then(env => {
       if (env.url && env.key) {
         setSupabase(createClient(env.url, env.key));
       }
-    });
+    }).catch(err => console.error("Env Load Error:", err));
     
-    return () => {
-      cleanup();
-    };
+    return () => cleanup();
   }, []);
 
   const cleanup = () => {
     if (channelRef.current) channelRef.current.unsubscribe();
-    if (pcRef.current) pcRef.current.close();
+    if (pcRef.current) {
+      pcRef.current.getSenders().forEach(sender => pcRef.current?.removeTrack(sender));
+      pcRef.current.close();
+    }
     setStatus('disconnected');
+    pcRef.current = null;
   };
 
   const initPeerConnection = () => {
-    const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+    const pc = new RTCPeerConnection({ 
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] 
+    });
     
     pc.onicecandidate = (e) => {
       if (e.candidate && channelRef.current) {
-        channelRef.current.send({ type: 'broadcast', event: 'signal', payload: { type: 'ice', candidate: e.candidate } });
+        channelRef.current.send({ 
+            type: 'broadcast', 
+            event: 'signal', 
+            payload: { type: 'ice', candidate: e.candidate } 
+        });
       }
     };
 
     pc.oniceconnectionstatechange = () => {
-      if (pc.iceConnectionState === 'disconnected' || pc.iceConnectionState === 'failed') {
+      const state = pc.iceConnectionState;
+      if (state === 'disconnected' || state === 'failed' || state === 'closed') {
         setStatus('disconnected');
-      } else if (pc.iceConnectionState === 'connected') {
+      } else if (state === 'connected' || state === 'completed') {
         setStatus('connected');
       }
     };
@@ -81,9 +92,13 @@ export default function P2PRoom({ defaultTab = 'connect' }) {
     channel.onopen = () => setStatus('connected');
     channel.onclose = () => setStatus('disconnected');
     channel.onmessage = async (e) => {
-      const msg = JSON.parse(e.data);
-      const decrypted = await decryptMessage(msg, secretKey);
-      setMessages(prev => [...prev, { text: decrypted, isSender: false, time: new Date().toLocaleTimeString() }]);
+      try {
+        const msg = JSON.parse(e.data);
+        const decrypted = await decryptMessage(msg, secretKey);
+        setMessages(prev => [...prev, { text: decrypted, isSender: false, time: new Date().toLocaleTimeString() }]);
+      } catch (err) {
+        console.error("Chat Message Error:", err);
+      }
     };
     chatChannelRef.current = channel;
   };
@@ -92,25 +107,29 @@ export default function P2PRoom({ defaultTab = 'connect' }) {
     channel.binaryType = 'arraybuffer';
     channel.onmessage = (e) => {
       if (typeof e.data === 'string') {
-        const msg = JSON.parse(e.data);
-        if (msg.type === 'start') {
-          incomingFileRef.current = msg;
-          incomingBuffersRef.current = [];
-          incomingSizeRef.current = 0;
-          setDownloadProgress(0);
-        } else if (msg.type === 'end') {
-          const blob = new Blob(incomingBuffersRef.current, { type: incomingFileRef.current.mime });
-          const url = URL.createObjectURL(blob);
-          setFiles(prev => [...prev, { ...incomingFileRef.current, url, isSender: false }]);
-          incomingFileRef.current = null;
-          setDownloadProgress(0);
-        }
+        try {
+            const msg = JSON.parse(e.data);
+            if (msg.type === 'start') {
+              incomingFileRef.current = msg;
+              incomingBuffersRef.current = [];
+              incomingSizeRef.current = 0;
+              setDownloadProgress(0);
+            } else if (msg.type === 'end') {
+              if (!incomingFileRef.current) return;
+              const blob = new Blob(incomingBuffersRef.current, { type: incomingFileRef.current.mime });
+              const url = URL.createObjectURL(blob);
+              setFiles(prev => [...prev, { ...incomingFileRef.current, url, isSender: false }]);
+              // Reset
+              incomingFileRef.current = null;
+              incomingBuffersRef.current = [];
+              setDownloadProgress(0);
+            }
+        } catch (err) { console.error("File Metadata Error", err); }
       } else {
+        if (!incomingFileRef.current) return;
         incomingBuffersRef.current.push(e.data);
         incomingSizeRef.current += e.data.byteLength;
-        if (incomingFileRef.current) {
-          setDownloadProgress(Math.round((incomingSizeRef.current / incomingFileRef.current.size) * 100));
-        }
+        setDownloadProgress(Math.round((incomingSizeRef.current / incomingFileRef.current.size) * 100));
       }
     };
     fileChannelRef.current = channel;
@@ -130,10 +149,8 @@ export default function P2PRoom({ defaultTab = 'connect' }) {
     channel.on('broadcast', { event: 'signal' }, async ({ payload }: any) => {
       if (payload.type === 'join') {
         const pc = initPeerConnection();
-        const chat = pc.createDataChannel('chat');
-        const file = pc.createDataChannel('file');
-        setupChatChannel(chat);
-        setupFileChannel(file);
+        setupChatChannel(pc.createDataChannel('chat'));
+        setupFileChannel(pc.createDataChannel('file'));
 
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
@@ -176,7 +193,7 @@ export default function P2PRoom({ defaultTab = 'connect' }) {
     });
   };
 
-  // --- Encryption ---
+  // --- Encryption Logic ---
   const getAesKey = async (secret: string) => {
     const enc = new TextEncoder();
     const keyMaterial = await crypto.subtle.importKey("raw", enc.encode(secret.padEnd(32, '0').slice(0,32)), {name: "PBKDF2"}, false, ["deriveBits", "deriveKey"]);
@@ -190,61 +207,37 @@ export default function P2PRoom({ defaultTab = 'connect' }) {
       const iv = crypto.getRandomValues(new Uint8Array(12));
       const enc = new TextEncoder();
       const cipher = await crypto.subtle.encrypt({name: "AES-GCM", iv}, key, enc.encode(text));
-      
-      const cipherArr = Array.from(new Uint8Array(cipher));
-      const ivArr = Array.from(iv);
       return { 
-        text: btoa(String.fromCharCode.apply(null, cipherArr)), 
-        iv: btoa(String.fromCharCode.apply(null, ivArr)), 
+        text: btoa(String.fromCharCode(...new Uint8Array(cipher))), 
+        iv: btoa(String.fromCharCode(...iv)), 
         encrypted: true 
       };
-    } catch (e) {
-      return { text, encrypted: false };
-    }
+    } catch (e) { return { text, encrypted: false }; }
   };
 
   const decryptMessage = async (msg: any, secret: string) => {
     if (!msg.encrypted) return msg.text;
-    if (!secret) return "🔒 [Encrypted - Enter Secret Key in Security Tab]";
+    if (!secret) return "🔒 [Encrypted - Enter Key in Security Tab]";
     try {
       const key = await getAesKey(secret);
-      const cipherStr = atob(msg.text);
-      const ivStr = atob(msg.iv);
-      const cipherBytes = new Uint8Array(cipherStr.length);
-      for (let i=0; i<cipherStr.length; i++) cipherBytes[i] = cipherStr.charCodeAt(i);
-      const ivBytes = new Uint8Array(ivStr.length);
-      for (let i=0; i<ivStr.length; i++) ivBytes[i] = ivStr.charCodeAt(i);
-      
+      const cipherBytes = Uint8Array.from(atob(msg.text), c => c.charCodeAt(0));
+      const ivBytes = Uint8Array.from(atob(msg.iv), c => c.charCodeAt(0));
       const decrypted = await crypto.subtle.decrypt({name: "AES-GCM", iv: ivBytes}, key, cipherBytes);
       return new TextDecoder().decode(decrypted);
-    } catch (e) {
-      return "🔒 [Decryption Failed - Wrong Key]";
-    }
+    } catch (e) { return "🔒 [Decryption Failed]"; }
   };
 
-  // --- Actions ---
   const sendMessage = async () => {
-    if (!chatInput || status !== 'connected' || !chatChannelRef.current) return;
+    if (!chatInput || !chatChannelRef.current || chatChannelRef.current.readyState !== 'open') return;
     const encrypted = await encryptMessage(chatInput, secretKey);
     chatChannelRef.current.send(JSON.stringify(encrypted));
     setMessages(prev => [...prev, { text: chatInput, isSender: true, time: new Date().toLocaleTimeString() }]);
     setChatInput('');
   };
 
-  const sendClipboard = async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      if (text) {
-        setChatInput(text);
-      }
-    } catch (e) {
-      alert("Clipboard access denied");
-    }
-  };
-
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || status !== 'connected' || !fileChannelRef.current) return;
+    if (!file || !fileChannelRef.current || fileChannelRef.current.readyState !== 'open') return;
 
     const id = Math.random().toString(36).slice(2);
     fileChannelRef.current.send(JSON.stringify({ type: 'start', id, name: file.name, size: file.size, mime: file.type }));
@@ -254,8 +247,8 @@ export default function P2PRoom({ defaultTab = 'connect' }) {
     
     const sendChunk = () => {
       while (offset < buffer.byteLength) {
-        if (fileChannelRef.current!.bufferedAmount > 65535) {
-          setTimeout(sendChunk, 50);
+        if (fileChannelRef.current!.bufferedAmount > 1024 * 1024) { // 1MB buffer limit
+          setTimeout(sendChunk, 100);
           return;
         }
         const chunk = buffer.slice(offset, offset + CHUNK_SIZE);
@@ -264,15 +257,15 @@ export default function P2PRoom({ defaultTab = 'connect' }) {
         setUploadProgress(Math.min(100, Math.round((offset / buffer.byteLength) * 100)));
       }
       fileChannelRef.current!.send(JSON.stringify({ type: 'end', id }));
-      setUploadProgress(0);
       setFiles(prev => [...prev, { id, name: file.name, size: file.size, mime: file.type, isSender: true }]);
+      setUploadProgress(0);
     };
     sendChunk();
   };
 
   return (
-    <div className="max-w-5xl mx-auto">
-      {/* Header & Status */}
+    <div className="max-w-5xl mx-auto p-4">
+      {/* Header */}
       <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
         <div className="flex items-center space-x-3">
           <div className="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-xl">
@@ -280,7 +273,7 @@ export default function P2PRoom({ defaultTab = 'connect' }) {
           </div>
           <div>
             <h2 className="text-xl font-bold dark:text-white">Secure P2P Room</h2>
-            <p className="text-sm text-gray-500">Direct Browser-to-Browser Connection</p>
+            <p className="text-sm text-gray-500">End-to-End Encrypted Transfer</p>
           </div>
         </div>
 
@@ -289,50 +282,37 @@ export default function P2PRoom({ defaultTab = 'connect' }) {
             {status === 'connected' ? <Wifi className="text-green-500" size={20} /> : <WifiOff className="text-red-500" size={20} />}
             <span className="font-bold text-gray-700 dark:text-gray-300 capitalize">{status}</span>
           </div>
-          {roomId && <div className="pl-4 border-l-2 border-gray-200 dark:border-gray-700 font-mono font-bold text-blue-600 dark:text-blue-400">Room: {roomId}</div>}
+          {roomId && <div className="pl-4 border-l-2 border-gray-200 dark:border-gray-700 font-mono font-bold text-blue-600 dark:text-blue-400">ID: {roomId}</div>}
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex space-x-2 mb-6 overflow-x-auto pb-2">
+      <div className="flex space-x-2 mb-6 overflow-x-auto pb-2 no-scrollbar">
         {['connect', 'chat', 'files', 'security'].map(t => (
-          <button key={t} onClick={() => setTab(t)} className={`px-6 py-3 rounded-xl font-bold capitalize transition-colors whitespace-nowrap ${tab === t ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm border border-gray-100 dark:border-gray-700'}`}>
+          <button key={t} onClick={() => setTab(t)} className={`px-6 py-3 rounded-xl font-bold capitalize transition-all ${tab === t ? 'bg-blue-600 text-white shadow-lg' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-100 dark:border-gray-700'}`}>
             {t}
           </button>
         ))}
       </div>
 
-      {/* Tab Content */}
+      {/* Main Container */}
       <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 min-h-[500px]">
-        
         {tab === 'connect' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
             <div className="space-y-6">
-              <h3 className="text-xl font-bold dark:text-white">Join Existing Room</h3>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Room Code</label>
-                <input type="text" value={roomId} onChange={e => setRoomId(e.target.value.toUpperCase())} placeholder="Enter 6-digit code" className="w-full p-4 bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-2xl dark:text-white focus:border-blue-500 outline-none font-mono text-lg font-bold uppercase" />
-              </div>
-              <button onClick={joinRoom} className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-lg transition-colors shadow-lg shadow-blue-500/30">
-                Join Room
-              </button>
+              <h3 className="text-xl font-bold dark:text-white">Join Room</h3>
+              <input type="text" value={roomId} onChange={e => setRoomId(e.target.value.toUpperCase())} placeholder="ENTER CODE" className="w-full p-4 bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-2xl dark:text-white focus:border-blue-500 outline-none font-mono text-xl text-center" />
+              <button onClick={joinRoom} className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold transition-all shadow-blue-500/20 shadow-lg">Join</button>
             </div>
-
-            <div className="space-y-6 border-t-2 md:border-t-0 md:border-l-2 border-gray-100 dark:border-gray-700 pt-8 md:pt-0 md:pl-12">
-              <h3 className="text-xl font-bold dark:text-white">Create New Room</h3>
-              <p className="text-gray-500">Generate a secure room code to share with your peer.</p>
-              <button onClick={createRoom} className="w-full py-4 bg-gray-900 hover:bg-black dark:bg-gray-700 dark:hover:bg-gray-600 text-white rounded-2xl font-bold text-lg transition-colors shadow-sm">
-                Generate Room Code
-              </button>
-
+            <div className="space-y-6 border-t md:border-t-0 md:border-l border-gray-100 dark:border-gray-700 pt-8 md:pt-0 md:pl-12">
+              <h3 className="text-xl font-bold dark:text-white">Host Room</h3>
+              <button onClick={createRoom} className="w-full py-4 bg-gray-900 dark:bg-gray-700 text-white rounded-2xl font-bold">Generate Code</button>
               {isHost && roomId && (
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-2xl border border-blue-100 dark:border-blue-800/30 flex flex-col items-center text-center space-y-4">
-                  <div className="text-sm font-bold text-blue-800 dark:text-blue-300 uppercase">Your Room Code</div>
-                  <div className="text-5xl font-black text-blue-600 dark:text-blue-400 font-mono tracking-widest">{roomId}</div>
-                  <div className="bg-white p-4 rounded-xl shadow-sm">
-                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(window.location.origin + '/tool/secure-room-join?room=' + roomId)}`} alt="QR Code" className="w-32 h-32" />
+                <div className="bg-blue-50 dark:bg-blue-900/10 p-6 rounded-2xl flex flex-col items-center">
+                  <span className="text-5xl font-black text-blue-600 mb-4 tracking-widest">{roomId}</span>
+                  <div className="bg-white p-2 rounded-lg">
+                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(window.location.origin + '/tool/secure-room-join?room=' + roomId)}`} alt="QR" />
                   </div>
-                  <p className="text-xs text-blue-600/70 dark:text-blue-400/70">Scan to join on mobile</p>
                 </div>
               )}
             </div>
@@ -340,88 +320,55 @@ export default function P2PRoom({ defaultTab = 'connect' }) {
         )}
 
         {tab === 'chat' && (
-          <div className="flex flex-col h-[500px]">
-            <div className="flex-1 bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 overflow-y-auto space-y-4 mb-6">
-              {messages.length === 0 ? (
-                <div className="h-full flex items-center justify-center text-gray-400 font-medium">
-                  {status === 'connected' ? 'Connected! Send a message.' : 'Connect to a room to start chatting.'}
-                </div>
-              ) : (
-                messages.map((m, i) => (
-                  <div key={i} className={`flex ${m.isSender ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[70%] p-4 rounded-2xl ${m.isSender ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 dark:text-white rounded-bl-none'}`}>
-                      <div className="break-words">{m.text}</div>
-                      <div className={`text-[10px] mt-2 font-bold ${m.isSender ? 'text-blue-200' : 'text-gray-400'}`}>{m.time}</div>
-                    </div>
+          <div className="flex flex-col h-[450px]">
+            <div className="flex-1 bg-gray-50 dark:bg-gray-900 rounded-2xl p-4 overflow-y-auto space-y-3 mb-4">
+              {messages.map((m, i) => (
+                <div key={i} className={`flex ${m.isSender ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`p-3 rounded-2xl max-w-[80%] ${m.isSender ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-700 dark:text-white shadow-sm'}`}>
+                    <p className="text-sm">{m.text}</p>
                   </div>
-                ))
-              )}
+                </div>
+              ))}
             </div>
-            
-            <div className="flex gap-4">
-              <button onClick={sendClipboard} disabled={status !== 'connected'} className="p-4 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-2xl transition-colors disabled:opacity-50" title="Paste from Clipboard">
-                <Clipboard size={24} />
-              </button>
-              <input
-                type="text"
-                value={chatInput}
-                onChange={e => setChatInput(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && sendMessage()}
-                disabled={status !== 'connected'}
-                placeholder={status === 'connected' ? "Type a message..." : "Not connected"}
-                className="flex-1 p-4 bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-2xl dark:text-white focus:border-blue-500 outline-none disabled:opacity-50"
-              />
-              <button onClick={sendMessage} disabled={status !== 'connected'} className="px-8 py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-2xl font-bold transition-colors shadow-sm">
-                <Send size={24} />
-              </button>
+            <div className="flex gap-2">
+              <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendMessage()} placeholder="Message..." className="flex-1 p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl border dark:border-gray-700 dark:text-white" />
+              <button onClick={sendMessage} className="p-4 bg-blue-600 text-white rounded-2xl"><Send /></button>
             </div>
           </div>
         )}
 
         {tab === 'files' && (
-          <div className="space-y-8">
-            <label className={`flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-3xl cursor-pointer transition-all ${status === 'connected' ? 'border-blue-300 bg-blue-50/50 dark:bg-blue-900/10 hover:bg-blue-50' : 'border-gray-300 bg-gray-50 dark:bg-gray-900 opacity-50 cursor-not-allowed'}`}>
-              <FileUp className={`w-10 h-10 mb-3 ${status === 'connected' ? 'text-blue-500' : 'text-gray-400'}`} />
-              <span className={`font-bold ${status === 'connected' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500'}`}>
-                {status === 'connected' ? 'Click or Drag & Drop to Send File' : 'Connect to a room to send files'}
-              </span>
+          <div className="space-y-6">
+            <label className={`w-full h-40 border-2 border-dashed rounded-3xl flex flex-col items-center justify-center cursor-pointer transition-all ${status === 'connected' ? 'border-blue-400 bg-blue-50/20' : 'opacity-50 grayscale cursor-not-allowed'}`}>
+              <FileUp className="text-blue-500 mb-2" size={32} />
+              <span className="font-bold text-gray-600">Send File</span>
               <input type="file" className="hidden" disabled={status !== 'connected'} onChange={handleFileUpload} />
             </label>
 
             {(uploadProgress > 0 || downloadProgress > 0) && (
-              <div className="bg-gray-50 dark:bg-gray-900 p-6 rounded-2xl border border-gray-200 dark:border-gray-700">
-                <div className="flex justify-between text-sm font-bold mb-2 dark:text-white">
-                  <span>{uploadProgress > 0 ? 'Uploading...' : 'Downloading...'}</span>
-                  <span>{uploadProgress > 0 ? uploadProgress : downloadProgress}%</span>
+              <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl">
+                <div className="flex justify-between mb-2 text-xs font-bold dark:text-white">
+                  <span>{uploadProgress > 0 ? 'Sending...' : 'Receiving...'}</span>
+                  <span>{uploadProgress || downloadProgress}%</span>
                 </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-                  <div className="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style={{ width: `${uploadProgress || downloadProgress}%` }}></div>
+                <div className="w-full bg-gray-200 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
+                  <div className="bg-blue-600 h-full transition-all" style={{ width: `${uploadProgress || downloadProgress}%` }}></div>
                 </div>
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {files.map((f, i) => (
-                <div key={i} className="bg-gray-50 dark:bg-gray-900 p-4 rounded-2xl border border-gray-200 dark:border-gray-700 flex flex-col justify-between">
-                  <div className="flex items-start space-x-3 mb-4">
-                    <div className="p-3 bg-white dark:bg-gray-800 rounded-xl shadow-sm">
-                      {f.mime.startsWith('image/') ? <ImageIcon className="text-blue-500" size={24} /> : <FileUp className="text-blue-500" size={24} />}
-                    </div>
-                    <div className="overflow-hidden">
-                      <div className="font-bold text-gray-900 dark:text-white truncate" title={f.name}>{f.name}</div>
-                      <div className="text-xs text-gray-500">{(f.size / 1024 / 1024).toFixed(2)} MB • {f.isSender ? 'Sent' : 'Received'}</div>
+                <div key={i} className="p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl border dark:border-gray-700 flex flex-col">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="p-2 bg-white dark:bg-gray-800 rounded-lg"><ImageIcon className="text-blue-500" /></div>
+                    <div className="truncate flex-1">
+                      <p className="font-bold text-sm dark:text-white truncate">{f.name}</p>
+                      <p className="text-[10px] text-gray-500">{(f.size / 1024 / 1024).toFixed(2)} MB</p>
                     </div>
                   </div>
-                  
                   {!f.isSender && f.url && (
-                    <div className="space-y-3">
-                      {f.mime.startsWith('image/') && (
-                        <img src={f.url} alt="Received" className="w-full h-32 object-cover rounded-xl border border-gray-200 dark:border-gray-700" />
-                      )}
-                      <a href={f.url} download={f.name} className="flex items-center justify-center w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm transition-colors shadow-sm">
-                        <Download size={16} className="mr-2" /> Download
-                      </a>
-                    </div>
+                    <a href={f.url} download={f.name} className="w-full py-2 bg-blue-600 text-white rounded-xl text-center text-xs font-bold"><Download size={14} className="inline mr-1"/> Download</a>
                   )}
                 </div>
               ))}
@@ -430,34 +377,13 @@ export default function P2PRoom({ defaultTab = 'connect' }) {
         )}
 
         {tab === 'security' && (
-          <div className="space-y-8 max-w-2xl mx-auto">
-            <div className="bg-amber-50 dark:bg-amber-900/20 p-6 rounded-2xl border border-amber-100 dark:border-amber-800/30 flex items-start space-x-4">
-              <Lock className="text-amber-600 dark:text-amber-400 shrink-0 mt-1" size={24} />
-              <div>
-                <h3 className="font-bold text-amber-900 dark:text-amber-300 mb-1">End-to-End Encryption</h3>
-                <p className="text-sm text-amber-800 dark:text-amber-400/80">
-                  WebRTC connections are already encrypted by default. However, you can add an additional layer of AES-GCM encryption to your chat messages by setting a shared secret key below. Both peers must enter the exact same key to read messages.
-                </p>
-              </div>
+          <div className="max-w-md mx-auto space-y-6">
+            <div className="p-4 bg-amber-50 dark:bg-amber-900/10 rounded-2xl border border-amber-200">
+                <p className="text-sm text-amber-800 dark:text-amber-200 font-medium">Add an extra password to your chat messages. Peers must use the same password to decrypt.</p>
             </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Shared Secret Key (Optional)</label>
-              <input
-                type="password"
-                value={secretKey}
-                onChange={e => setSecretKey(e.target.value)}
-                placeholder="Enter a secret passphrase..."
-                className="w-full p-4 bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-2xl dark:text-white focus:border-amber-500 outline-none text-lg font-mono"
-              />
-            </div>
-            
-            <div className="text-center p-4 text-gray-500 text-sm">
-              Files are transferred directly via WebRTC data channels and are protected by standard WebRTC DTLS encryption.
-            </div>
+            <input type="password" value={secretKey} onChange={e => setSecretKey(e.target.value)} placeholder="Secret Key..." className="w-full p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl border dark:border-gray-700 dark:text-white" />
           </div>
         )}
-
       </div>
     </div>
   );
