@@ -14,17 +14,19 @@ const ICON_MAP: Record<string, keyof typeof LucideIcons> = {
 };
 
 export const Icon = ({ name, className }: { name: string, className?: string }) => {
-  // 1. First, check if the name (lowercase) exists in our custom AI mapping
-  const cleanName = name.toLowerCase().trim();
-  const mappedIconName = ICON_MAP[cleanName];
+  // 1. Try to find an exact match in Lucide first (preserves your old icons like 'FileCode')
+  let LucideIcon = (LucideIcons as any)[name];
 
-  // 2. If it's in the map, use the mapped Lucide name.
-  // 3. If NOT in the map, use the original 'name' exactly as passed (to support FileCode, Calendar, etc.)
-  const finalIconName = mappedIconName || name;
-  
-  const LucideIcon = (LucideIcons as any)[finalIconName];
+  // 2. If not found, check the custom AI mapping (lowercase for flexibility)
+  if (!LucideIcon) {
+    const cleanName = name.toLowerCase().trim();
+    const mappedName = ICON_MAP[cleanName];
+    if (mappedName) {
+      LucideIcon = (LucideIcons as any)[mappedName];
+    }
+  }
 
-  // Fallback to Wrench only if the icon literally doesn't exist in the library
+  // 3. Fallback to Wrench if it's still not found
   if (!LucideIcon) return <LucideIcons.Wrench className={className} />;
   
   return <LucideIcon className={className} />;
