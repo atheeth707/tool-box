@@ -12,13 +12,7 @@ const tools: Tool[] = [
   { name: "Framer AI", url: "https://www.framer.com/ai", type: "Freemium", tags: ["design"], region: "Global" },
   { name: "Durable AI", url: "https://durable.co", type: "Freemium", tags: ["1-click site"], region: "Global" },
 
-{ 
-  name: "ATXP.ai", 
-  url: "https://atxp.ai", 
-  type: "Freemium", 
-  category: "Script & Ideas", // or "AI Infrastructure"
-  tags: ["agent-protocol", "llm-gateway", "automated-tools", "crypto-wallet"] 
-},
+{ name: "ATXP.ai", url: "https://atxp.ai", type: "Freemium", tags: ["agent-protocol"], region:"Global" },
 
   { name: "10Web AI", url: "https://10web.io", type: "Freemium", tags: ["wordpress"], region: "Global" },
   { name: "Wix AI", url: "https://www.wix.com/ai", type: "Freemium", tags: ["builder"], region: "Global" },
