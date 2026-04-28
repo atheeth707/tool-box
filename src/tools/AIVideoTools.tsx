@@ -5,26 +5,27 @@ type Tool = {
   name: string;
   url: string;
   type: "Free" | "Freemium" | "Paid";
+  category?: string; // Add this line to allow the 'category' property
   tags: string[];
 };
 
 const tools: Tool[] = [
-  { name: "LM Arena", url: "https://chat.lmsys.org", type: "Free", tags: ["chatbot-arena", "benchmarks"] },
-  { name: "Runway ML", url: "https://runwayml.com", type: "Freemium", tags: ["gen-3 alpha", "text-to-video"] },
-  { name: "Pika Labs", url: "https://pika.art", type: "Freemium", tags: ["animation", "lip-sync"] },
-  { name: "Luma AI", url: "https://lumalabs.ai", type: "Freemium", tags: ["dream machine", "realistic"] },
-  { name: "HeyGen", url: "https://www.heygen.com", type: "Freemium", tags: ["avatar", "talking head"] },
-  { name: "Sora (OpenAI)", url: "https://openai.com/sora", type: "Paid", tags: ["photorealistic", "upcoming"] },
-  { name: "Kling AI", url: "https://klingai.com", type: "Freemium", tags: ["cinematic", "1080p"] },
-  { name: "Kaiber", url: "https://kaiber.ai", type: "Paid", tags: ["music videos", "stylized"] },
-  { name: "Synthesia", url: "https://www.synthesia.io", type: "Paid", tags: ["enterprise", "presenters"] },
-  { name: "InVideo AI", url: "https://invideo.io", type: "Freemium", tags: ["script-to-video", "stock"] },
+  { name: "LM Arena", url: "https://chat.lmsys.org", type: "Free", category: "Arena", tags: ["chatbot-arena", "benchmarks"] },
+  { name: "Runway ML", url: "https://runwayml.com", type: "Freemium", category: "Video", tags: ["gen-3 alpha", "text-to-video"] },
+  { name: "Pika Labs", url: "https://pika.art", type: "Freemium", category: "Animation", tags: ["animation", "lip-sync"] },
+  { name: "Luma AI", url: "https://lumalabs.ai", type: "Freemium", category: "Video", tags: ["dream machine", "realistic"] },
+  { name: "HeyGen", url: "https://www.heygen.com", type: "Freemium", category: "Avatar", tags: ["avatar", "talking head"] },
+  { name: "Sora (OpenAI)", url: "https://openai.com/sora", type: "Paid", category: "Video", tags: ["photorealistic", "upcoming"] },
+  { name: "Kling AI", url: "https://klingai.com", type: "Freemium", category: "Video", tags: ["cinematic", "1080p"] },
+  { name: "Kaiber", url: "https://kaiber.ai", type: "Paid", category: "Art", tags: ["music videos", "stylized"] },
+  { name: "Synthesia", url: "https://www.synthesia.io", type: "Paid", category: "Presenter", tags: ["enterprise", "presenters"] },
+  { name: "InVideo AI", url: "https://invideo.io", type: "Freemium", category: "Editor", tags: ["script-to-video", "stock"] },
   { name: "CapCut AI", url: "https://www.capcut.com", type: "Free", category: "Editor", tags: ["tiktok", "captions"] },
-  { name: "Wonder Dynamics", url: "https://wonderdynamics.com", type: "Paid", tags: ["vfx", "cgi replacement"] },
-  { name: "D-ID", url: "https://www.d-id.com", type: "Freemium", tags: ["animation", "historical photos"] },
-  { name: "DeepBrain AI", url: "https://www.deepbrain.io", type: "Paid", tags: ["news", "kiosk"] },
-  { name: "Elai.io", url: "https://elai.io", type: "Freemium", tags: ["training", "corporate"] },
-  { name: "Minimax (Hailuo)", url: "https://www.hailuoai.com/video", type: "Free", tags: ["chinese model", "fast"] },
+  { name: "Wonder Dynamics", url: "https://wonderdynamics.com", type: "Paid", category: "VFX", tags: ["vfx", "cgi replacement"] },
+  { name: "D-ID", url: "https://www.d-id.com", type: "Freemium", category: "Avatar", tags: ["animation", "historical photos"] },
+  { name: "DeepBrain AI", url: "https://www.deepbrain.io", type: "Paid", category: "Presenter", tags: ["news", "kiosk"] },
+  { name: "Elai.io", url: "https://elai.io", type: "Freemium", category: "Video", tags: ["training", "corporate"] },
+  { name: "Minimax (Hailuo)", url: "https://www.hailuoai.com/video", type: "Free", category: "Video", tags: ["chinese model", "fast"] },
 ];
 
 export default function AIVideoTools() {
@@ -33,7 +34,11 @@ export default function AIVideoTools() {
 
   const filtered = tools.filter(tool => {
     const matchFilter = filter === "All" || tool.type === filter;
-    const matchSearch = tool.name.toLowerCase().includes(search.toLowerCase()) || tool.tags.join(" ").toLowerCase().includes(search.toLowerCase());
+    const matchSearch = 
+      tool.name.toLowerCase().includes(search.toLowerCase()) || 
+      tool.tags.join(" ").toLowerCase().includes(search.toLowerCase()) ||
+      (tool.category && tool.category.toLowerCase().includes(search.toLowerCase()));
+    
     return matchFilter && matchSearch;
   });
 
