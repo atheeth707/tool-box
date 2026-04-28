@@ -19,7 +19,6 @@ const tools: Tool[] = [
   // ✍️ SCRIPT & IDEAS
   { name: "ChatGPT", url: "https://chat.openai.com", type: "Freemium", category: "Script & Ideas", tags: ["scripts", "brainstorming", "gpt-4"] },
   { name: "Claude AI", url: "https://claude.ai", type: "Freemium", category: "Script & Ideas", tags: ["long-form", "creative writing"] },
-  // ✨ Added ATXP.AI
   { name: "ATXP.ai", url: "https://atxp.ai", type: "Freemium", category: "Script & Ideas", tags: ["agent-protocol", "free-credits", "automation"] },
   { name: "Jasper AI", url: "https://www.jasper.ai", type: "Paid", category: "Script & Ideas", tags: ["marketing", "copywriting"] },
   { name: "Copy.ai", url: "https://www.copy.ai", type: "Freemium", category: "Script & Ideas", tags: ["social media", "blogging"] },
@@ -52,13 +51,13 @@ export default function AIContentTools() {
   });
 
   return (
-    <div className="p-6 max-w-7xl mx-auto font-sans bg-[#fbfcfd] min-h-screen">
+    <div className="p-6 max-w-7xl mx-auto font-sans bg-[#fbfcfd] dark:bg-slate-950 min-h-screen transition-colors duration-300">
       {/* HERO SECTION */}
       <div className="mb-12 text-center">
         <h1 className="text-5xl font-black mb-4 bg-gradient-to-r from-blue-600 via-purple-600 to-red-600 bg-clip-text text-transparent">
           AI Content Creation Hub
         </h1>
-        <p className="text-gray-500 text-lg max-w-2xl mx-auto">
+        <p className="text-gray-500 dark:text-slate-400 text-lg max-w-2xl mx-auto">
           Scale your YouTube and social media presence using the world's most powerful AI tools.
         </p>
       </div>
@@ -71,9 +70,9 @@ export default function AIContentTools() {
           placeholder="Search by tool, platform, or tags..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="relative w-full p-5 pl-14 border-0 rounded-2xl shadow-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-700 bg-white"
+          className="relative w-full p-5 pl-14 border-0 rounded-2xl shadow-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-700 bg-white dark:bg-slate-900 dark:text-slate-200 dark:placeholder-slate-500"
         />
-        <span className="absolute left-5 top-5 text-gray-400">🔍</span>
+        <span className="absolute left-5 top-5 text-gray-400 dark:text-slate-500">🔍</span>
       </div>
 
       {/* PRICE FILTERS */}
@@ -84,8 +83,8 @@ export default function AIContentTools() {
             onClick={() => setFilter(f)}
             className={`px-8 py-2.5 rounded-xl font-bold transition-all duration-300 ${
               filter === f 
-              ? "bg-gray-900 text-white shadow-xl scale-105" 
-              : "bg-white text-gray-500 border border-gray-100 hover:bg-gray-50 shadow-sm"
+              ? "bg-gray-900 text-white dark:bg-blue-600 shadow-xl scale-105" 
+              : "bg-white dark:bg-slate-900 text-gray-500 dark:text-slate-400 border border-gray-100 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800 shadow-sm"
             }`}
           >
             {f}
@@ -101,23 +100,23 @@ export default function AIContentTools() {
             href={tool.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative p-8 bg-white border border-gray-50 rounded-[2rem] shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 overflow-hidden"
+            className="group relative p-8 bg-white dark:bg-slate-900 border border-gray-50 dark:border-slate-800 rounded-[2rem] shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 overflow-hidden"
           >
             {/* Background Accent */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full -mr-16 -mt-16 group-hover:bg-blue-100 transition-colors"></div>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 dark:bg-blue-900/10 rounded-full -mr-16 -mt-16 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/20 transition-colors"></div>
 
             <div className="relative flex justify-between items-start mb-6">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-gray-50 rounded-2xl text-gray-700 group-hover:bg-blue-600 group-hover:text-white transition-all duration-500">
+                <div className="p-3 bg-gray-50 dark:bg-slate-800 rounded-2xl text-gray-700 dark:text-slate-300 group-hover:bg-blue-600 group-hover:text-white transition-all duration-500">
                   <Icon name={tool.category} className="w-6 h-6" />
                 </div>
-                <h2 className="font-bold text-2xl text-gray-800 tracking-tight group-hover:text-blue-600 transition-colors">
+                <h2 className="font-bold text-2xl text-gray-800 dark:text-slate-100 tracking-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                   {tool.name}
                 </h2>
               </div>
               <span className={`text-[10px] uppercase tracking-widest px-3 py-1 rounded-full font-black ${
-                tool.type === 'Free' ? 'bg-emerald-50 text-emerald-600' : 
-                tool.type === 'Freemium' ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-600'
+                tool.type === 'Free' ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 
+                tool.type === 'Freemium' ? 'bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400' : 'bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400'
               }`}>
                 {tool.type}
               </span>
@@ -129,13 +128,13 @@ export default function AIContentTools() {
 
             <div className="flex flex-wrap gap-2 mb-8">
               {tool.tags.map(tag => (
-                <span key={tag} className="text-[11px] bg-gray-50 text-gray-400 px-3 py-1.5 rounded-lg border border-gray-100 font-medium group-hover:border-blue-100 group-hover:text-blue-400 transition-all">
+                <span key={tag} className="text-[11px] bg-gray-50 dark:bg-slate-800 text-gray-400 dark:text-slate-500 px-3 py-1.5 rounded-lg border border-gray-100 dark:border-slate-700 font-medium group-hover:border-blue-100 dark:group-hover:border-blue-900 group-hover:text-blue-400 transition-all">
                   #{tag}
                 </span>
               ))}
             </div>
 
-            <div className="pt-5 border-t border-gray-50 flex items-center justify-between text-sm font-bold text-gray-400 group-hover:text-blue-600 transition-all">
+            <div className="pt-5 border-t border-gray-50 dark:border-slate-800 flex items-center justify-between text-sm font-bold text-gray-400 dark:text-slate-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-all">
               <span>Explore Platform</span>
               <span className="transform translate-x-0 group-hover:translate-x-2 transition-transform">→</span>
             </div>
