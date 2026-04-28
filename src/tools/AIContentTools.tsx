@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Icon } from "../components/Icon"; // Ensure you have the updated Icon.tsx
 
 type Tool = {
   name: string;
@@ -18,6 +19,16 @@ const tools: Tool[] = [
   // ✍️ SCRIPT & IDEAS
   { name: "ChatGPT", url: "https://chat.openai.com", type: "Freemium", category: "Script & Ideas", tags: ["scripts", "brainstorming", "gpt-4"] },
   { name: "Claude AI", url: "https://claude.ai", type: "Freemium", category: "Script & Ideas", tags: ["long-form", "creative writing"] },
+  
+  // ✨ ADDED ATXP.AI HERE
+  { 
+    name: "ATXP.ai", 
+    url: "https://atxp.ai", 
+    type: "Freemium", 
+    category: "Script & Ideas", 
+    tags: ["multi-model", "ai-agents", "free-credits", "automation"] 
+  },
+
   { name: "Jasper AI", url: "https://www.jasper.ai", type: "Paid", category: "Script & Ideas", tags: ["marketing", "copywriting"] },
   { name: "Copy.ai", url: "https://www.copy.ai", type: "Freemium", category: "Script & Ideas", tags: ["social media", "blogging"] },
 
@@ -97,7 +108,16 @@ export default function AIContentTools() {
             className="group p-6 bg-white border border-gray-100 rounded-3xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
           >
             <div className="flex justify-between items-start mb-4">
-              <h2 className="font-bold text-xl group-hover:text-blue-600 transition-colors">{tool.name}</h2>
+              <div className="flex items-center gap-3">
+                {/* ICON ADDED HERE */}
+                <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
+                  <Icon name="ai" className="w-6 h-6" />
+                </div>
+                <h2 className="font-bold text-xl group-hover:text-blue-600 transition-colors">
+                  {tool.name}
+                </h2>
+              </div>
+
               <span className={`text-[10px] uppercase tracking-widest px-2 py-1 rounded-md font-bold ${
                 tool.type === 'Free' ? 'bg-green-100 text-green-700' : 
                 tool.type === 'Freemium' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
