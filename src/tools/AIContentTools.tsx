@@ -12,8 +12,8 @@ type Tool = {
 const tools: Tool[] = [
   // 📈 SEO & KEYWORDS
   { name: "vidIQ", url: "https://vidiq.com", type: "Freemium", category: "SEO & Keywords", tags: ["youtube", "keywords", "competitors"] },
-  { name: "TubeBuddy", url: "https://www.tubebuddy.com", type: "Freemium", category: "SEO & Keywords", tags: ["extension", "management", "seo"] },
-  { name: "AnswerThePublic", url: "https://answerthepublic.com", type: "Freemium", category: "SEO & Keywords", tags: ["search trends", "ideas"] },
+  { name: "Tube Buddy", url: "https://www.tubebuddy.com", type: "Freemium", category: "SEO & Keywords", tags: ["extension", "management", "seo"] },
+  { name: "Answer The Public", url: "https://answerthepublic.com", type: "Freemium", category: "SEO & Keywords", tags: ["search trends", "ideas"] },
   { name: "Ahrefs Keyword Explorer", url: "https://ahrefs.com/keyword-generator", type: "Free", category: "SEO & Keywords", tags: ["google", "youtube seo"] },
 
   // ✍️ SCRIPT & IDEAS
@@ -31,7 +31,7 @@ const tools: Tool[] = [
   { name: "Lovo.ai", url: "https://lovo.ai", type: "Freemium", category: "Video & Voice", tags: ["voice cloning", "ads"] },
 
   // 📊 ANALYTICS & THUMBNAILS
-  { name: "ThumbnailCheck", url: "https://thumbnailcheck.com", type: "Free", category: "Analytics", tags: ["ab testing", "preview"] },
+  { name: "Thumbnail Check", url: "https://thumbnailcheck.com", type: "Free", category: "Analytics", tags: ["ab testing", "preview"] },
   { name: "Social Blade", url: "https://socialblade.com", type: "Free", category: "Analytics", tags: ["stats", "growth tracking"] },
   { name: "ViewStats", url: "https://www.viewstats.com", type: "Free", category: "Analytics", tags: ["mrbeast tool", "advanced stats"] },
 ];
