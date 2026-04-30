@@ -18,7 +18,7 @@ const tools: Tool[] = [
 
   // ✍️ SCRIPT & IDEAS
   { 
-    name: "AI YT Title Gen", 
+    name: "AI YT Title Generator", 
     url: "https://tool-box-free.vercel.app/tool/yt-title-generator", 
     type: "Free", 
     category: "Script & Ideas", 
