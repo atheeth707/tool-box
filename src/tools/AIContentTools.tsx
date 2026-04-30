@@ -24,6 +24,13 @@ const tools: Tool[] = [
     category: "Script & Ideas", 
     tags: ["viral titles", "no-signup", "youtube-seo"] 
   },
+  { 
+    name: "Insta Caption Gen", 
+    url: "https://tool-box-free.vercel.app/tool/instagram-caption-generator", 
+    type: "Free", 
+    category: "Script & Ideas", 
+    tags: ["instagram", "captions", "no-signup", "social-media"] 
+  },
   { name: "ChatGPT", url: "https://chat.openai.com", type: "Freemium", category: "Script & Ideas", tags: ["scripts", "brainstorming", "gpt-4"] },
   { name: "Claude AI", url: "https://claude.ai", type: "Freemium", category: "Script & Ideas", tags: ["long-form", "creative writing"] },
   { name: "ATXP.ai", url: "https://atxp.ai", type: "Freemium", category: "Script & Ideas", tags: ["agent-protocol", "free-credits", "automation"] },
