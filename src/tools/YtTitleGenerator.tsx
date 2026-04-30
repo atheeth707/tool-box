@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Type, Copy } from 'lucide-react';
+import { Type, Copy, ExternalLink, Sparkles } from 'lucide-react';
 
 export default function YtTitleGenerator() {
   const [keyword, setKeyword] = useState('');
@@ -26,6 +26,31 @@ export default function YtTitleGenerator() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
+      {/* vidIQ Recommendation Banner */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-red-600 to-orange-500 p-6 rounded-3xl shadow-lg border border-red-400/20 group">
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-4 text-white">
+            <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-md">
+              <Sparkles className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-xl font-black">Want AI-Powered Viral Titles?</h3>
+              <p className="text-red-100 text-sm">Try the official <span className="font-bold">vidIQ AI Generator</span> — Free & No Signup Required!</p>
+            </div>
+          </div>
+          <a 
+            href="https://vidiq.com/ai-title-generator/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 bg-white text-red-600 px-6 py-3 rounded-2xl font-bold hover:bg-gray-100 transition-all shadow-xl hover:scale-105"
+          >
+            Open vidIQ <ExternalLink size={18} />
+          </a>
+        </div>
+        {/* Decorative background circle */}
+        <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all"></div>
+      </div>
+
       <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 text-center">
         <div className="w-16 h-16 bg-red-50 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
           <Type className="w-8 h-8 text-red-600 dark:text-red-400" />
@@ -49,7 +74,13 @@ export default function YtTitleGenerator() {
           {titles.map((title, i) => (
             <div key={i} className="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex justify-between items-center group hover:border-red-300 transition-colors">
               <span className="font-bold text-gray-900 dark:text-white">{title}</span>
-              <button onClick={() => navigator.clipboard.writeText(title)} className="p-2 text-gray-400 hover:text-red-600 transition-colors opacity-0 group-hover:opacity-100">
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(title);
+                  // Optional: You could add a "Copied!" toast here
+                }} 
+                className="p-2 text-gray-400 hover:text-red-600 transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100"
+              >
                 <Copy size={18} />
               </button>
             </div>
