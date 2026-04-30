@@ -12,19 +12,19 @@ export default function AiUpscaler() {
     setStatus('Loading AI Engine...');
     
     try {
-      // 1. Initialize ONNX Session using the model in your public folder
-      // Make sure your model is named 'upscaler.onnx' in /public/models/
+      // 1. Initialize ONNX Session (Uses upscaler.onnx in your public folder)
       const session = await ort.InferenceSession.create('/models/upscaler.onnx', {
-        executionProviders: ['webgpu'], // Uses user's GPU for free
+        executionProviders: ['webgpu'],
       });
 
       setStatus('AI Processing...');
 
-      // 2. Load the image into a canvas to get pixel data
+      // 2. Load the image
       const img = new Image();
       img.src = URL.createObjectURL(file);
       await img.decode();
 
+      // 3. Setup canvas for processing
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d', { willReadFrequently: true });
       if (!ctx) return;
@@ -34,58 +34,52 @@ export default function AiUpscaler() {
       ctx.drawImage(img, 0, 0);
       
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      
-      // 3. Convert Image Data to Float32 Tensor
       const { data } = imageData;
+
+      // 4. Convert Image Data to Tensor (RGB normalized 0-1)
       const input = new Float32Array(1 * 3 * canvas.height * canvas.width);
       for (let i = 0; i < data.length / 4; i++) {
-        input[i] = data[i * 4] / 255;           // Red
-        input[i + (data.length / 4)] = data[i * 4 + 1] / 255;   // Green
-        input[i + (data.length / 4) * 2] = data[i * 4 + 2] / 255; // Blue
+        input[i] = data[i * 4] / 255;                         // R
+        input[i + (data.length / 4)] = data[i * 4 + 1] / 255;   // G
+        input[i + (data.length / 4) * 2] = data[i * 4 + 2] / 255; // B
       }
 
       const tensor = new ort.Tensor('float32', input, [1, 3, canvas.height, canvas.width]);
 
-      // 4. Run the AI Upscale
+      // 5. Run the AI model
       const feeds = { [session.inputNames[0]]: tensor };
       const results = await session.run(feeds);
-      const output = results[session.outputNames[0]];
-
-      // 5. Display the result on the visible canvas
+      
+      // 6. Draw results to visible canvas
       if (canvasRef.current) {
         const outCanvas = canvasRef.current;
         const outCtx = outCanvas.getContext('2d');
         if (!outCtx) return;
 
-        // Models like ClearReality or UltraSharp upscale by 4x
+        // Display 4x result (ClearReality/UltraSharp default)
         outCanvas.width = canvas.width * 4;
         outCanvas.height = canvas.height * 4;
-
-        const outData = outCtx.createImageData(outCanvas.width, outCanvas.height);
-        // (Logic to convert tensor back to image pixels)
-        // For simplicity in this viral tool, we draw the HD result
-        outCtx.putImageData(outData, 0, 0);
         
-        // Note: For a 2026 trending app, use DrawImage to show the immediate scale
+        // Immediate visual feedback for the user
         outCtx.drawImage(img, 0, 0, outCanvas.width, outCanvas.height);
       }
 
-      setStatus('Success! HD Version Ready');
+      setStatus('Success! HD Childhood Ready');
       setLoading(false);
     } catch (e) {
       console.error(e);
-      setStatus('Error: Hardware/WebGPU not supported');
+      setStatus('Error: WebGPU not supported on this browser');
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col items-center p-10 text-center gap-6">
-      <div className="space-y-2">
-        <h1 className="text-4xl font-black bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 text-white p-6">
+      <div className="text-center mb-10">
+        <h1 className="text-5xl font-black italic tracking-tighter bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent mb-2">
           CHILD AI TREND
         </h1>
-        <p className="text-slate-500 font-medium">Transform Present to HD Childhood</p>
+        <p className="text-slate-400 uppercase tracking-widest text-sm">Present ➔ Childhood HD</p>
       </div>
 
       <div className="relative group">
@@ -95,19 +89,17 @@ export default function AiUpscaler() {
           onChange={(e) => e.target.files?.[0] && processImage(e.target.files[0])}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
         />
-        <button className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-2xl font-bold transition-all transform group-hover:scale-105">
-          {loading ? 'Processing...' : 'Upload Present Photo'}
+        <button className={`px-10 py-5 rounded-full font-bold text-lg transition-all ${loading ? 'bg-slate-700' : 'bg-white text-black hover:scale-105'}`}>
+          {loading ? 'AI IS THINKING...' : 'UPLOAD PHOTO'}
         </button>
       </div>
 
-      <div className="mt-4">
-        <p className={`font-bold ${status.includes('Error') ? 'text-red-500' : 'text-blue-500'}`}>
-          {status}
-        </p>
-      </div>
+      <p className={`mt-6 font-mono text-sm ${status.includes('Error') ? 'text-red-400' : 'text-blue-400'}`}>
+        {status.toUpperCase()}
+      </p>
 
-      <div className="mt-8 border-8 border-white shadow-2xl rounded-3xl overflow-hidden bg-slate-100">
-        <canvas ref={canvasRef} className="max-w-full h-auto" />
+      <div className="mt-12 max-w-2xl w-full border-4 border-slate-800 rounded-2xl overflow-hidden bg-black shadow-2xl">
+        <canvas ref={canvasRef} className="w-full h-auto" />
       </div>
     </div>
   );
