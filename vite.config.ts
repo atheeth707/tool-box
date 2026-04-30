@@ -10,5 +10,19 @@ export default defineConfig(async () => {
     const m = await import('./.vite-source-tags.js');
     plugins.push(m.sourceTags());
   } catch {}
-  return { plugins };
+
+  return { 
+    plugins,
+    server: {
+      headers: {
+        // Required for WebGPU and AI model access in 2026
+        'Cross-Origin-Opener-Policy': 'same-origin',
+        'Cross-Origin-Embedder-Policy': 'credentialless',
+      },
+    },
+    optimizeDeps: {
+      // Prevents Vite from trying to bundle the AI engine incorrectly
+      exclude: ['onnxruntime-web'], 
+    },
+  };
 })
