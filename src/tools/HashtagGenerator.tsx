@@ -40,7 +40,7 @@ export default function HashtagGenerator() {
 
           {/* Action Button - Updated with new link */}
           <a 
-            href="https://tool-box-free.vercel.app/tool/hashtag-generator" 
+            href="https://www.veed.io/tools/script-generator/hashtag-generator" 
             target="_blank" 
             rel="noopener noreferrer"
             className="inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-10 py-5 rounded-2xl font-black text-xl transition-all shadow-2xl shadow-blue-600/30 hover:scale-[1.02] active:scale-95"
