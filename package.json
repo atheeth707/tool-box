@@ -10,7 +10,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "replicate": "^1.0.1",
     "@supabase/supabase-js": "^2.99.1",
     "@tailwindcss/vite": "^4.2.1",
     "framer-motion": "^12.35.0",
@@ -18,9 +17,7 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.13.1",
-    "tailwindcss": "^4.2.1",
-    "onnxruntime-web": "1.20.0",
-    "vite-plugin-cross-origin-isolation": "^0.1.6"
+    "tailwindcss": "^4.2.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
