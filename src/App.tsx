@@ -1,3 +1,5 @@
+import AiUpscaler from './AiUpscaler';
+
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import Home from './pages/Home';
@@ -6,6 +8,9 @@ import ToolPage from './pages/ToolPage';
 
 function App() {
   return (
+
+<AiUpscaler/>
+
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Layout />}>
