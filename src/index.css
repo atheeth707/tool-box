@@ -1,21 +1,23 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Layout from './components/Layout';
-import Home from './pages/Home';
-import Category from './pages/Category';
-import ToolPage from './pages/ToolPage';
+@import "tailwindcss";
 
-function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Home />} />
-          <Route path="category/:categoryId" element={<Category />} />
-          <Route path="tool/:toolId" element={<ToolPage />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
-  );
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-export default App;
+:root {
+  color-scheme: light dark;
+}
+
+body {
+  @apply bg-gray-50 text-gray-900 antialiased transition-colors duration-200;
+  width: 100%;
+  overflow-x: hidden; /* Prevents mobile horizontal scrolling */
+}
+
+/* Ensure embedded tools like Iframes resize correctly */
+iframe {
+  max-width: 100%;
+  height: auto;
+}
