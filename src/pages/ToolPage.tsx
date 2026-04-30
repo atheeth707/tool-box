@@ -28,8 +28,17 @@ export default function ToolPage() {
       .catch(() => setLoading(false));
   }, [toolId]);
 
-  if (loading) return <div className="flex justify-center p-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>;
-  if (!tool) return <div className="text-center py-12 text-xl text-gray-600 dark:text-gray-300">Tool not found</div>;
+  if (loading) return (
+    <div className="flex justify-center items-center min-h-[50vh]">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    </div>
+  );
+
+  if (!tool) return (
+    <div className="text-center py-20 text-xl text-gray-600 dark:text-gray-300 px-4">
+      Tool not found
+    </div>
+  );
 
   const ToolComponent = getToolComponent(tool.id);
 
@@ -47,31 +56,56 @@ export default function ToolPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <Link to={tool.category_id ? `/category/${tool.category_id}` : '/'} className="inline-flex items-center text-sm text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors">
-        <ArrowLeft size={16} className="mr-1" /> Back to {tool.category_id || 'Tools'}
+    /* max-w-5xl ensures it doesn't get too wide on desktop; px-4 adds mobile breathing room */
+    <div className="max-w-5xl mx-auto space-y-6 md:space-y-10 px-4 sm:px-6 lg:px-8 py-4">
+      
+      {/* Adaptive Back Button */}
+      <Link 
+        to={tool.category_id ? `/category/${tool.category_id}` : '/'} 
+        className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors"
+      >
+        <ArrowLeft size={16} className="mr-1.5" /> 
+        <span>Back to {tool.category_id || 'Tools'}</span>
       </Link>
 
-      <div className="bg-white dark:bg-gray-800 p-8 md:p-12 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm text-center relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
-        <div className="inline-flex bg-blue-50 dark:bg-blue-900/30 p-5 rounded-2xl mb-6">
-          <Icon name={tool.icon} className="w-12 h-12 text-blue-600 dark:text-blue-400" />
-        </div>
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">{tool.name}</h1>
-        <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto text-lg">{tool.description}</p>
+      {/* Hero Header Card: Adjusts padding and text size for mobile */}
+      <div className="bg-white dark:bg-gray-800 p-6 sm:p-8 md:p-14 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm text-center relative overflow-hidden">
+        {/* Decorative Top Gradient Line */}
+        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
         
-        <div className="flex items-center justify-center space-x-4 mt-8">
-          <div className="text-sm font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-4 py-2 rounded-full">
+        {/* Adaptive Icon Size */}
+        <div className="inline-flex bg-blue-50 dark:bg-blue-900/20 p-4 sm:p-6 rounded-2xl mb-6">
+          <Icon name={tool.icon} className="w-10 h-10 sm:w-14 sm:h-14 text-blue-600 dark:text-blue-400" />
+        </div>
+        
+        <h1 className="text-2xl sm:text-3xl md:text-5xl font-extrabold text-gray-900 dark:text-white mb-4 tracking-tight">
+          {tool.name}
+        </h1>
+        
+        <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">
+          {tool.description}
+        </p>
+        
+        {/* Adaptive Stats and Share Buttons */}
+        <div className="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-4 mt-8">
+          <div className="text-xs sm:text-sm font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700/50 px-5 py-2.5 rounded-full">
             {tool.views.toLocaleString()} uses
           </div>
-          <button onClick={handleShare} className="flex items-center text-sm font-medium text-gray-600 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 bg-gray-100 hover:bg-blue-50 dark:bg-gray-700 dark:hover:bg-gray-600 px-4 py-2 rounded-full transition-colors">
+          <button 
+            onClick={handleShare} 
+            className="w-full sm:w-auto flex items-center justify-center text-sm font-semibold text-gray-600 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 bg-gray-100 hover:bg-blue-50 dark:bg-gray-700 dark:hover:bg-gray-600 px-6 py-2.5 rounded-full transition-all active:scale-95"
+          >
             <Share2 size={16} className="mr-2" /> Share Tool
           </button>
         </div>
       </div>
 
-      <div className="py-4">
-        <ToolComponent />
+      {/* Main Tool Component Section */}
+      <div className="py-2 sm:py-6">
+        {/* We wrap ToolComponent to ensure any internal Iframes or wide tables scale correctly */}
+        <div className="w-full overflow-hidden">
+          <ToolComponent />
+        </div>
       </div>
     </div>
   );
