@@ -17,6 +17,13 @@ const tools: Tool[] = [
   { name: "Ahrefs Keyword Explorer", url: "https://ahrefs.com/keyword-generator", type: "Free", category: "SEO & Keywords", tags: ["google", "youtube seo"] },
 
   // ✍️ SCRIPT & IDEAS
+  { 
+    name: "AI YT Title Gen", 
+    url: "https://tool-box-free.vercel.app/tool/yt-title-generator", 
+    type: "Free", 
+    category: "Script & Ideas", 
+    tags: ["viral titles", "no-signup", "youtube-seo"] 
+  },
   { name: "ChatGPT", url: "https://chat.openai.com", type: "Freemium", category: "Script & Ideas", tags: ["scripts", "brainstorming", "gpt-4"] },
   { name: "Claude AI", url: "https://claude.ai", type: "Freemium", category: "Script & Ideas", tags: ["long-form", "creative writing"] },
   { name: "ATXP.ai", url: "https://atxp.ai", type: "Freemium", category: "Script & Ideas", tags: ["agent-protocol", "free-credits", "automation"] },
