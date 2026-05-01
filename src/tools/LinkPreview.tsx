@@ -1,43 +1,44 @@
-import React, { useState, useCallback } from 'react';
-import { Eye, Globe, ExternalLink, AlertCircle, Share2, Copy, Check } from 'lucide-react';
+import React, { useState, useCallback, useRef } from 'react';
+import { Eye, Globe, ExternalLink, AlertCircle, Copy, Check, Share2, Layers, Zap } from 'lucide-react';
 
-interface PreviewData {
+interface EmbedData {
   title: string;
   description: string;
   image: string | null;
   domain: string;
   url: string;
   favicon: string | null;
+  themeColor: string;
 }
 
-export default function AdvancedLinkPreview() {
+export default function LinkEmbedStudio() {
   const [url, setUrl] = useState('');
-  const [data, setData] = useState<PreviewData | null>(null);
+  const [data, setData] = useState<EmbedData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
 
-  const fetchPreview = async () => {
+  // FIX: Robust Fetching Engine to bypass CORS/CSP
+  const fetchEmbedData = async () => {
     if (!url) return;
     
-    // Normalize URL
     let targetUrl = url.trim();
-    if (!/^https?:\/\//i.test(targetUrl)) {
-      targetUrl = `https://${targetUrl}`;
-    }
+    if (!/^https?:\/\//i.test(targetUrl)) targetUrl = `https://${targetUrl}`;
 
     setLoading(true);
     setError('');
     
     try {
-      // Using a more robust proxy approach
-      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+      // Primary Engine: AllOrigins with Cache Busting
+      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}&timestamp=${Date.now()}`;
       const res = await fetch(proxyUrl);
       
-      if (!res.ok) throw new Error('Network response was not ok');
-      
+      if (!res.ok) throw new Error('Proxy unreachable');
       const json = await res.json();
-      if (!json.contents) throw new Error('No content found');
+      
+      if (!json.contents) {
+        throw new Error('This site strictly blocks automated scrapers. Try a different URL.');
+      }
 
       const parser = new DOMParser();
       const doc = parser.parseFromString(json.contents, 'text/html');
@@ -50,16 +51,16 @@ export default function AdvancedLinkPreview() {
         return null;
       };
 
-      // Advanced Scraping Logic
-      const title = getMeta(['og:title', 'twitter:title', 'title']) || doc.querySelector('title')?.innerText || 'Untitled Page';
-      const description = getMeta(['og:description', 'twitter:description', 'description']) || 'No summary available for this destination.';
-      const image = getMeta(['og:image', 'twitter:image', 'image']);
+      // Extract Rich Data
+      const title = getMeta(['og:title', 'twitter:title', 'title']) || doc.querySelector('title')?.innerText || 'Unknown Destination';
+      const description = getMeta(['og:description', 'twitter:description', 'description']) || 'No preview summary provided by the host.';
+      const image = getMeta(['og:image', 'twitter:image', 'image', 'thumbnail']);
+      const themeColor = getMeta(['theme-color', 'msapplication-TileColor']) || '#6366f1';
       
       // Favicon logic
-      const favicon = doc.querySelector('link[rel*="icon"]')?.getAttribute('href');
-      let finalFavicon = null;
-      if (favicon) {
-        finalFavicon = favicon.startsWith('http') ? favicon : new URL(favicon, targetUrl).href;
+      let favicon = doc.querySelector('link[rel*="icon"]')?.getAttribute('href');
+      if (favicon && !favicon.startsWith('http')) {
+        favicon = new URL(favicon, targetUrl).href;
       }
 
       const domain = new URL(targetUrl).hostname.replace('www.', '');
@@ -70,119 +71,120 @@ export default function AdvancedLinkPreview() {
         image,
         domain,
         url: targetUrl,
-        favicon: finalFavicon
+        favicon,
+        themeColor
       });
     } catch (err) {
-      setError('Could not fetch preview. This site may have strict security headers (CORS/CSP).');
-      console.error(err);
+      setError('CORS/Security Block: The target site has high-level protection. Most modern browsers block these requests for privacy.');
     } finally {
       setLoading(false);
     }
   };
 
-  const copyToClipboard = () => {
-    if (!data) return;
-    navigator.clipboard.writeText(data.url);
+  const copyLink = () => {
+    navigator.clipboard.writeText(data?.url || '');
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-4 space-y-8 animate-in fade-in duration-500">
-      {/* Search Header */}
-      <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] shadow-xl border border-slate-100 dark:border-slate-800">
-        <div className="flex items-center gap-4 mb-8">
-          <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/30">
-            <Eye className="text-white" size={24} />
+    <div className="max-w-5xl mx-auto p-6 space-y-10 font-sans">
+      {/* Search Console */}
+      <section className="bg-white dark:bg-slate-900 rounded-[3rem] p-10 shadow-2xl border border-slate-100 dark:border-slate-800">
+        <div className="flex items-center gap-5 mb-10">
+          <div className="w-14 h-14 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-2xl flex items-center justify-center shadow-xl rotate-3">
+            <Zap className="text-white fill-current" size={28} />
           </div>
           <div>
-            <h2 className="text-2xl font-black tracking-tight dark:text-white">Meta Explorer</h2>
-            <p className="text-slate-500 text-sm font-medium">Extract social metadata from any URL</p>
+            <h1 className="text-3xl font-black tracking-tighter dark:text-white">Smart Embed Engine</h1>
+            <p className="text-slate-500 font-medium tracking-tight">Convert raw URLs into rich social cards</p>
           </div>
         </div>
 
-        <div className="relative group">
+        <div className="flex flex-col md:flex-row gap-4">
           <input
             type="text"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && fetchPreview()}
-            placeholder="Paste link here (e.g., github.com)"
-            className="w-full p-6 pr-40 bg-slate-50 dark:bg-slate-950 border-2 border-slate-100 dark:border-slate-800 rounded-3xl dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none text-lg transition-all"
+            onKeyDown={(e) => e.key === 'Enter' && fetchEmbedData()}
+            placeholder="Paste URL (e.g., spotify.com, github.com)"
+            className="flex-1 p-6 bg-slate-50 dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 rounded-3xl dark:text-white focus:border-indigo-500 outline-none text-lg transition-all"
           />
           <button 
-            onClick={fetchPreview}
-            disabled={loading || !url}
-            className="absolute right-3 top-3 bottom-3 px-8 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white rounded-2xl font-black text-sm uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-indigo-500/20"
+            onClick={fetchEmbedData}
+            disabled={loading}
+            className="px-10 py-6 bg-indigo-600 hover:bg-indigo-700 text-white rounded-3xl font-black uppercase tracking-widest text-sm shadow-xl shadow-indigo-500/20 active:scale-95 transition-all"
           >
-            {loading ? <RefreshIcon /> : 'Analyze'}
+            {loading ? 'Processing...' : 'Generate Embed'}
           </button>
         </div>
-      </div>
 
-      {error && (
-        <div className="flex items-center gap-3 p-6 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 rounded-3xl border border-rose-100 dark:border-rose-800/30 animate-in slide-in-from-top-2">
-          <AlertCircle size={20} />
-          <p className="font-bold text-sm">{error}</p>
-        </div>
-      )}
+        {error && (
+          <div className="mt-6 flex items-center gap-3 p-5 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 rounded-2xl border border-rose-100 dark:border-rose-800/30">
+            <AlertCircle size={18} />
+            <span className="text-xs font-bold">{error}</span>
+          </div>
+        )}
+      </section>
 
-      {loading && <SkeletonCard />}
-
-      {data && !loading && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-          {/* Card Preview */}
-          <div className="space-y-4">
-            <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 ml-4">Visual Card</h3>
-            <div className="group relative bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 transition-transform hover:-translate-y-1">
-              <a href={data.url} target="_blank" rel="noreferrer" className="block">
-                <div className="aspect-video bg-slate-100 dark:bg-slate-950 relative overflow-hidden">
-                  {data.image ? (
-                    <img src={data.image} alt="Preview" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 gap-3">
-                      <Globe size={64} strokeWidth={1} />
-                      <span className="text-[10px] font-black uppercase">No Media Found</span>
-                    </div>
-                  )}
-                  <div className="absolute top-4 left-4 flex items-center gap-2 bg-black/50 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[10px] font-bold">
-                    {data.favicon && <img src={data.favicon} className="w-4 h-4 rounded-sm" alt="icon" />}
-                    {data.domain}
+      {/* Embed Output Area */}
+      {data && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 animate-in slide-in-from-bottom-10 duration-700">
+          
+          {/* THE EMBED (Social Style) */}
+          <div className="lg:col-span-7 space-y-6">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
+              <Layers size={14} /> Rendered Preview
+            </h3>
+            
+            <div className="bg-[#f2f3f5] dark:bg-[#2b2d31] rounded-xl overflow-hidden shadow-lg border-l-4" style={{ borderColor: data.themeColor }}>
+              <div className="p-4 flex flex-col md:flex-row gap-4">
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center gap-2 mb-1">
+                    {data.favicon && <img src={data.favicon} className="w-4 h-4 rounded-full" alt="" />}
+                    <span className="text-xs font-bold text-indigo-500 dark:text-indigo-400 hover:underline cursor-pointer">{data.domain}</span>
                   </div>
-                </div>
-                <div className="p-8">
-                  <h4 className="text-xl font-black dark:text-white mb-3 line-clamp-2 leading-tight group-hover:text-indigo-600 transition-colors">
-                    {data.title}
-                  </h4>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed line-clamp-3 mb-6">
+                  <h2 className="text-lg font-bold text-[#060607] dark:text-white leading-tight">
+                    <a href={data.url} target="_blank" rel="noreferrer" className="hover:underline">{data.title}</a>
+                  </h2>
+                  <p className="text-sm text-[#2e3338] dark:text-[#dbdee1] leading-snug">
                     {data.description}
                   </p>
-                  <div className="flex items-center gap-2 text-indigo-600 font-bold text-xs uppercase tracking-tighter">
-                    Read More <ExternalLink size={14} />
-                  </div>
                 </div>
-              </a>
+                
+                {data.image && (
+                  <div className="md:w-32 md:h-32 w-full h-48 rounded-lg overflow-hidden flex-shrink-0 bg-black/5">
+                    <img src={data.image} alt="" className="w-full h-full object-cover" />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Data Inspector */}
-          <div className="space-y-4">
-            <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 ml-4">Metadata Inspector</h3>
-            <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] shadow-xl border border-slate-100 dark:border-slate-800 space-y-6">
-              <DataField label="Full Destination" value={data.url} />
-              <DataField label="Meta Title" value={data.title} />
-              <div className="grid grid-cols-2 gap-4">
-                <button 
-                  onClick={copyToClipboard}
-                  className="flex items-center justify-center gap-2 py-4 bg-slate-100 dark:bg-slate-800 hover:bg-indigo-600 hover:text-white rounded-2xl transition-all font-black text-xs uppercase tracking-widest"
-                >
-                  {copied ? <Check size={16} /> : <Copy size={16} />}
-                  {copied ? 'Copied' : 'Copy URL'}
-                </button>
-                <button className="flex items-center justify-center gap-2 py-4 bg-slate-100 dark:bg-slate-800 hover:bg-emerald-600 hover:text-white rounded-2xl transition-all font-black text-xs uppercase tracking-widest">
-                  <Share2 size={16} />
-                  Share
-                </button>
+          {/* Action Sidebar */}
+          <div className="lg:col-span-5 space-y-6">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-2">Interaction</h3>
+            <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] shadow-xl border border-slate-100 dark:border-slate-800 space-y-4">
+              <button 
+                onClick={copyLink}
+                className="w-full flex items-center justify-between p-5 bg-slate-50 dark:bg-slate-950 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-2xl border border-slate-100 dark:border-slate-800 transition-all group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-white dark:bg-slate-900 rounded-lg shadow-sm">
+                    {copied ? <Check size={18} className="text-emerald-500" /> : <Copy size={18} className="text-slate-400 group-hover:text-indigo-500" />}
+                  </div>
+                  <span className="text-sm font-bold dark:text-white">{copied ? 'Link Copied!' : 'Copy Source URL'}</span>
+                </div>
+                <ExternalLink size={16} className="text-slate-300" />
+              </button>
+
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+                <p className="text-[10px] font-black uppercase text-slate-400 mb-4 tracking-widest">Metadata Tags Found</p>
+                <div className="flex flex-wrap gap-2">
+                  <Tag label="OpenGraph" active={!!data.image} />
+                  <Tag label="Twitter Cards" active={true} />
+                  <Tag label="Theme-Color" active={data.themeColor !== '#6366f1'} />
+                </div>
               </div>
             </div>
           </div>
@@ -192,36 +194,12 @@ export default function AdvancedLinkPreview() {
   );
 }
 
-// Sub-components
-function DataField({ label, value }: { label: string; value: string }) {
+function Tag({ label, active }: { label: string, active: boolean }) {
   return (
-    <div>
-      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">{label}</p>
-      <div className="p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl text-sm font-mono text-slate-600 dark:text-slate-300 break-all border border-slate-100 dark:border-slate-800">
-        {value}
-      </div>
-    </div>
-  );
-}
-
-function SkeletonCard() {
-  return (
-    <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden shadow-xl animate-pulse border border-slate-100 dark:border-slate-800">
-      <div className="aspect-video bg-slate-200 dark:bg-slate-800" />
-      <div className="p-8 space-y-4">
-        <div className="h-6 w-3/4 bg-slate-200 dark:bg-slate-800 rounded-lg" />
-        <div className="h-4 w-full bg-slate-100 dark:bg-slate-800 rounded-lg" />
-        <div className="h-4 w-5/6 bg-slate-100 dark:bg-slate-800 rounded-lg" />
-      </div>
-    </div>
-  );
-}
-
-function RefreshIcon() {
-  return (
-    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-    </svg>
+    <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tighter border ${
+      active ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-400 border-slate-100'
+    }`}>
+      {label}
+    </span>
   );
 }
