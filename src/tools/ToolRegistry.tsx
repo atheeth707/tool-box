@@ -18,7 +18,7 @@ import BrowserInfo from './BrowserInfo';
 import SpeedTest from './SpeedTest';
 import PingTool from './PingTool';
 import Base64FileDecoder from './Base64FileDecoder';
-import BackgroundRemover from './BackgroundRemover';
+import AIBackgroundRemover from './AIBackgroundRemover';
 import PasswordGenerator from './PasswordGenerator';
 import WordCounter from './WordCounter';
 import Base64Encoder from './Base64Encoder';
@@ -256,7 +256,7 @@ export const ToolComponents: Record<string, React.FC> = {
   'file-size-converter': FileSizeConverter,
   'text-table-generator': TextTableGenerator,
 'base64-file-decoder': Base64FileDecoder,
-'background-remover': BackgroundRemover,
+'ai-background-remover': AIBackgroundRemover,
   // ✅ ADDED — these were imported but missing from the map
   'invoice-generator': InvoiceGenerator,
   'resume-builder': ResumeBuilder,
