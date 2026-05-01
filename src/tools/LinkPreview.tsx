@@ -18,23 +18,24 @@ export default function LinkPreview() {
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
 
-  // --- Logic: Normalize Input (Handles 'htp', 'google.com', etc.) ---
+  // --- Logic 1: Smart Normalization ---
+  // Fixes "htp", "google.com", or missing protocols
   const normalizeUrl = (input: string): string => {
     let cleaned = input.trim();
-    // Regex: Check if it starts with any variation of http/https
     if (!/^https?:\/\//i.test(cleaned)) {
-      // Remove common typos at the start like htp:// or hp://
+      // Strips common typos like 'htp://' or 'hp://' and replaces with 'https://'
       cleaned = cleaned.replace(/^(hp|htp|htpp|http):?(\/\/)?/i, '');
       cleaned = `https://${cleaned}`;
     }
     return cleaned;
   };
 
-  // --- Logic: Waterfall Fetching to Bypass CORS/Security ---
+  // --- Logic 2: Waterfall Fetching ---
+  // Tries multiple proxies to bypass CORS/Security blocks
   const fetchWithFallback = async (targetUrl: string) => {
     const proxies = [
-      (u: string) => `[https://api.allorigins.win/get?url=$](https://api.allorigins.win/get?url=$){encodeURIComponent(u)}&_=${Date.now()}`,
-      (u: string) => `[https://corsproxy.io/?$](https://corsproxy.io/?$){encodeURIComponent(u)}`
+      (u: string) => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}&_=${Date.now()}`,
+      (u: string) => `https://corsproxy.io/?${encodeURIComponent(u)}`
     ];
 
     for (const getProxyUrl of proxies) {
@@ -46,20 +47,19 @@ export default function LinkPreview() {
         let html = '';
         
         try {
-          // Attempt to parse as JSON (AllOrigins format)
+          // Check if response is JSON (AllOrigins) or raw HTML (CorsProxy)
           const json = JSON.parse(result);
           html = json.contents || '';
         } catch {
-          // Use raw text (Corsproxy format)
           html = result;
         }
 
         if (html && html.length > 200) return html;
       } catch (e) {
-        console.warn("Proxy attempt failed, moving to next...");
+        console.warn("Attempt failed, trying next proxy...");
       }
     }
-    throw new Error("Target site blocked the request (CORS/Security Headers).");
+    throw new Error("Access Blocked: Target site has high-level security headers.");
   };
 
   const generatePreview = async () => {
@@ -83,13 +83,13 @@ export default function LinkPreview() {
         return null;
       };
 
-      // Extract Content
+      // Content Extraction
       const title = getMeta(['og:title', 'twitter:title', 'title']) || doc.querySelector('title')?.innerText || 'Link Preview';
-      const description = getMeta(['og:description', 'twitter:description', 'description']) || 'No description available.';
+      const description = getMeta(['og:description', 'twitter:description', 'description']) || 'No description available for this site.';
       const image = getMeta(['og:image', 'twitter:image', 'image']);
       const themeColor = getMeta(['theme-color']) || '#6366f1';
       
-      // Strict Favicon Handling (TS Fix)
+      // Strict Favicon Handling (Fixes TS2322)
       const faviconAttr = doc.querySelector('link[rel*="icon"]')?.getAttribute('href');
       let finalFavicon: string | null = null;
       if (faviconAttr) {
@@ -110,7 +110,7 @@ export default function LinkPreview() {
         themeColor
       });
     } catch (e) {
-      setError('This site has strict security (like ChatGPT/Cloudflare). Client-side access is limited.');
+      setError('This site is protected (e.g. ChatGPT/Amazon). Browser-based tools are often blocked.');
     } finally {
       setLoading(false);
     }
@@ -125,12 +125,16 @@ export default function LinkPreview() {
 
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-6">
-      <div className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] shadow-xl border border-slate-100 dark:border-slate-800">
-        <div className="flex items-center gap-4 mb-6">
-          <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
-            <Zap className="text-white fill-current" size="{20}"/>
+      {/* Control Panel */}
+      <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] shadow-xl border border-slate-100 dark:border-slate-800">
+        <div className="flex items-center gap-4 mb-8">
+          <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20 rotate-3">
+            <Zap className="text-white fill-current" size={24} />
           </div>
-          <h2 className="text-xl font-black dark:text-white">Universal Embed Generator</h2>
+          <div>
+            <h2 className="text-2xl font-black dark:text-white leading-tight">Universal Preview</h2>
+            <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">Metadata Embed Generator</p>
+          </div>
         </div>
 
         <div className="flex flex-col md:flex-row gap-3">
@@ -139,61 +143,69 @@ export default function LinkPreview() {
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && generatePreview()}
-            placeholder="google.com, htp://site.com, etc."
-            className="flex-1 p-4 bg-slate-50 dark:bg-slate-950 border-2 border-slate-100 dark:border-slate-800 rounded-2xl dark:text-white outline-none focus:border-indigo-500 transition-all"
+            placeholder="google.com, htp://site.com..."
+            className="flex-1 p-5 bg-slate-50 dark:bg-slate-950 border-2 border-slate-100 dark:border-slate-800 rounded-3xl dark:text-white outline-none focus:border-indigo-500 transition-all text-lg"
           />
           <button 
             onClick={generatePreview}
             disabled={loading}
-            className="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-400 text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all shadow-lg shadow-indigo-500/20"
+            className="px-10 py-5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-400 text-white rounded-3xl font-black uppercase tracking-widest text-sm transition-all shadow-xl shadow-indigo-500/20 active:scale-95"
           >
-            {loading ? 'Fetching...' : 'Preview'}
+            {loading ? 'Fetching...' : 'Generate'}
           </button>
         </div>
-        {error && <div className="mt-4 text-rose-500 text-xs font-bold flex items-center gap-2"><AlertCircle size="{14}"/> {error}</div>}
+        {error && (
+          <div className="mt-4 flex items-center gap-2 text-rose-500 text-[10px] font-black uppercase tracking-wider">
+            <AlertCircle size={14}/> {error}
+          </div>
+        )}
       </div>
 
+      {/* Output Area */}
       {data && (
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 animate-in slide-in-from-bottom-4 duration-500">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 animate-in slide-in-from-bottom-5 duration-500">
           <div className="md:col-span-8">
-            <div className="bg-[#f2f3f5] dark:bg-[#2b2d31] rounded-lg overflow-hidden border-l-4 shadow-lg" style={{ borderColor: data.themeColor }}>
-              <div className="p-4 flex flex-col sm:flex-row gap-4">
-                <div className="flex-1 space-y-1">
+            <div 
+              className="bg-[#f2f3f5] dark:bg-[#2b2d31] rounded-2xl overflow-hidden border-l-[6px] shadow-2xl transition-transform hover:scale-[1.01]" 
+              style={{ borderColor: data.themeColor }}
+            >
+              <div className="p-6 flex flex-col sm:flex-row gap-6">
+                <div className="flex-1 space-y-2">
                   <div className="flex items-center gap-2">
-                    {data.favicon && <img src={data.favicon} className="w-3 h-3 rounded-full" alt="" />}
-                    <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-tight">{data.domain}</span>
+                    {data.favicon && <img src={data.favicon} className="w-4 h-4 rounded-full" alt="icon" />}
+                    <span className="text-[11px] font-black text-indigo-500 uppercase tracking-widest">{data.domain}</span>
                   </div>
-                  <h3 className="text-base font-bold dark:text-white leading-tight hover:underline cursor-pointer">
-                    <a href={data.url} target="_blank" rel="noreferrer">{data.title}</a>
+                  <h3 className="text-xl font-bold dark:text-white leading-tight">
+                    <a href={data.url} target="_blank" rel="noreferrer" className="hover:underline">{data.title}</a>
                   </h3>
-                  <p className="text-sm text-slate-600 dark:text-[#dbdee1] line-clamp-3">
+                  <p className="text-sm text-slate-600 dark:text-[#dbdee1] leading-relaxed line-clamp-3">
                     {data.description}
                   </p>
                 </div>
                 {data.image && (
-                  <div className="w-full sm:w-24 h-32 sm:h-24 rounded-md overflow-hidden bg-black/5 flex-shrink-0">
-                    <img src={data.image} className="w-full h-full object-cover" alt="" />
+                  <div className="w-full sm:w-32 h-32 rounded-xl overflow-hidden bg-black/5 flex-shrink-0 shadow-inner">
+                    <img src={data.image} className="w-full h-full object-cover" alt="Preview" />
                   </div>
                 )}
               </div>
             </div>
           </div>
 
-          <div className="md:col-span-4 bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-xl self-start space-y-4">
+          <div className="md:col-span-4 space-y-4">
             <button 
               onClick={copyLink}
-              className="w-full flex items-center justify-center gap-2 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-indigo-600 hover:text-white rounded-xl transition-all font-bold text-xs uppercase tracking-widest"
+              className="w-full flex items-center justify-between p-5 bg-white dark:bg-slate-900 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 rounded-[2rem] border border-slate-100 dark:border-slate-800 transition-all font-black text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-400 shadow-sm"
             >
-              {copied ? <Check size="{14}"/> : <Copy size="{14}"/>}
-              {copied ? 'Copied' : 'Copy Source'}
+              <span>{copied ? 'Copied to Clipboard' : 'Copy Link URL'}</span>
+              {copied ? <Check size={16} className="text-emerald-500" /> : <Copy size={16} />}
             </button>
             <a 
               href={data.url} 
               target="_blank" 
               rel="noreferrer"
-              className="w-full flex items-center justify-center gap-2 py-3 bg-indigo-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-indigo-700"
+              className="w-full flex items-center justify-center gap-3 py-5 bg-indigo-600 text-white rounded-[2rem] font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 shadow-lg shadow-indigo-500/20"
             >
-              Visit <ExternalLink size="{14}"/>
+              Visit Website <ExternalLink size={16} />
             </a>
           </div>
         </div>
