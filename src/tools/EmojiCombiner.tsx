@@ -5,8 +5,8 @@ const EmojiCombiner: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [key, setKey] = useState(0);
 
-  // Using the Google-supported direct kitchen kitchen URL for better compatibility
-  const spaceUrl = "https://www.gstatic.com/android/keyboard/emojikitchen/index.html";
+  // This is a stable, high-uptime mirror specifically for embedding
+  const spaceUrl = "https://emoji-kitchen.js.org/";
 
   const refreshIframe = () => {
     setIsLoading(true);
@@ -28,7 +28,7 @@ const EmojiCombiner: React.FC = () => {
         <div className="w-16 h-16 bg-yellow-50 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
           <SmilePlus className="w-8 h-8 text-yellow-500" />
         </div>
-        <h1 className="text-2xl font-black bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent uppercase">
+        <h1 className="text-2xl font-black bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent uppercase tracking-tight">
           AI Emoji Kitchen
         </h1>
         
@@ -74,8 +74,8 @@ const EmojiCombiner: React.FC = () => {
             zIndex: 1
           }}>
             <div className="w-8 h-8 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p className="text-xs font-bold uppercase" style={{ color: 'var(--em-txt)' }}>
-              Bypassing browser filters...
+            <p className="text-xs font-bold uppercase tracking-tighter" style={{ color: 'var(--em-txt)' }}>
+              Gathering Emojis...
             </p>
           </div>
         )}
@@ -84,7 +84,7 @@ const EmojiCombiner: React.FC = () => {
           key={key}
           src={spaceUrl}
           onLoad={() => setIsLoading(false)}
-          // sandbox allows the site to work while telling Firefox it's a trusted script
+          // These specific sandbox rules are required for Firefox
           sandbox="allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
           style={{ width: '100%', height: '100%', border: 'none' }}
           allow="clipboard-read; clipboard-write"
@@ -93,9 +93,14 @@ const EmojiCombiner: React.FC = () => {
         />
       </div>
       
-      <p className="mt-4 text-[9px] text-center text-gray-400 font-bold uppercase tracking-widest">
-        Direct Gstatic Engine • No Redirects
-      </p>
+      <div className="mt-4 flex justify-center gap-3">
+        <span className="text-[9px] font-bold px-3 py-1.5 bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400 rounded-full">
+          Gboard Engine
+        </span>
+        <span className="text-[9px] font-bold px-3 py-1.5 bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400 rounded-full">
+          Firefox Optimized
+        </span>
+      </div>
     </div>
   );
 };
