@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 const AIImageGenerator: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const spaceUrl = "https://atheeth777-ai-text-to-image.hf.space";
+  const spaceUrl = "https://baidu-ernie-image-turbo.hf.space";
 
   return (
     <div className="p-4 max-w-6xl mx-auto font-sans dark:bg-slate-950 transition-colors">
