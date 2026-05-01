@@ -1,3 +1,4 @@
+import AIChatbot from './AIChatbot'
 import AIImageGenerator from './AIImageGenerator'
 import InstagramCaptionGenerator from './InstagramCaptionGenerator'
 import AIContentTools from './AIContentTools'
@@ -298,6 +299,7 @@ export const ToolComponents: Record<string, React.FC> = {
 'ai-content-tools': AIContentTools,
 'instagram-caption-generator':InstagramCaptionGenerator,
 'ai-image-generator': AIImageGenerator,
+'ai-chatbot': AIChatbot,
 };
 
 export const getToolComponent = (id: string) => {
