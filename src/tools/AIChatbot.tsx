@@ -4,7 +4,7 @@ const AIChatBot: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   // Using a fast, reliable Llama-3-8B Space that allows embedding
-  const spaceUrl = "https://huggingface-projects-llama-3-8b-instruct.hf.space";
+  const spaceUrl = "https://tencent-hy3-preview.hf.space";
 
   return (
     <div className="p-4 max-w-6xl mx-auto font-sans dark:bg-slate-950 transition-colors">
