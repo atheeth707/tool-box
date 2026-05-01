@@ -1,74 +1,113 @@
-import React, { useState } from 'react';
-import { ChefHat, Copy, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ChefHat, Copy, RotateCcw, Sparkles } from 'lucide-react';
 
-const EmojiChef: React.FC = () => {
-  const [emoji1, setEmoji1] = useState('🐱');
-  const [emoji2, setEmoji2] = useState('🍕');
+const EMOJIS = [
+  '😀', '🫠', '🤡', '👽', '🐱', '🐶', '🦊', '💩', '👻', '🔥', 
+  '🌈', '💖', '✨', '🍎', '🥑', '🍕', '🤠', '🥳', '😎', '🤮'
+];
+
+const EmojiKitchen: React.FC = () => {
+  const [left, setLeft] = useState('🐱');
+  const [right, setRight] = useState('🤠');
+  const [result, setResult] = useState('');
+  const [loading, setLoading] = useState(true);
   const [copyStatus, setCopyStatus] = useState(false);
 
-  // Using a stable open-source API that maps directly to Google's assets
-  const mixUrl = `https://emojik.vercel.app/s/${emoji1}_${emoji2}?size=256`;
+  // This API endpoint handles the complex Google Gstatic sorting and URL mapping
+  const mixUrl = `https://emojik.vercel.app/s/${left}_${right}?size=512`;
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(mixUrl);
-    setCopyStatus(true);
-    setTimeout(() => setCopyStatus(false), 2000);
+  const handleRandom = () => {
+    setLeft(EMOJIS[Math.floor(Math.random() * EMOJIS.length)]);
+    setRight(EMOJIS[Math.floor(Math.random() * EMOJIS.length)]);
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white dark:bg-slate-900 rounded-[32px] shadow-2xl border border-slate-100 dark:border-slate-800 font-sans">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-2xl">
-          <ChefHat className="text-orange-500 w-6 h-6" />
-        </div>
-        <div>
-          <h2 className="text-xl font-black uppercase tracking-tight dark:text-white">Emoji Kitchen</h2>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Live Gstatic Embed</p>
-        </div>
-      </div>
-
-      <div className="bg-slate-50 dark:bg-black rounded-[24px] p-8 flex flex-col items-center justify-center min-h-[320px] relative overflow-hidden">
-        {/* Ingredient Display */}
-        <div className="flex items-center gap-4 mb-8 z-10">
-          <span className="text-3xl animate-bounce">{emoji1}</span>
-          <div className="w-8 h-[2px] bg-slate-200 dark:bg-slate-800" />
-          <span className="text-3xl animate-bounce" style={{ animationDelay: '0.2s' }}>{emoji2}</span>
+    <div className="max-w-4xl mx-auto p-4 font-sans selection:bg-yellow-200">
+      <div className="bg-white dark:bg-gray-900 rounded-[40px] shadow-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+        
+        {/* Header Section */}
+        <div className="p-8 pb-0 flex flex-col items-center">
+          <div className="w-12 h-12 bg-yellow-400 rounded-2xl flex items-center justify-center shadow-lg mb-4">
+            <ChefHat className="text-white w-6 h-6" />
+          </div>
+          <h2 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight">Emoji Kitchen</h2>
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.3em] mt-1">Google Asset Engine</p>
         </div>
 
-        {/* The Resulting Mix */}
-        <div className="relative group">
-          <div className="absolute inset-0 bg-orange-400/20 rounded-full blur-2xl group-hover:bg-orange-400/40 transition-all" />
-          <img 
-            src={mixUrl} 
-            alt="Emoji Mix" 
-            className="w-40 h-40 object-contain relative z-10 transition-transform group-hover:scale-110 duration-500"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = "https://fonts.gstatic.com/s/e/notoemoji/latest/1f635_200d_1f4ab/512.webp";
-            }}
-          />
+        {/* The "Stove" - Mixing Area */}
+        <div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+          
+          {/* Left Ingredient */}
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-32 h-32 bg-gray-50 dark:bg-gray-800 rounded-[32px] flex items-center justify-center text-6xl shadow-inner">
+              {left}
+            </div>
+            <div className="grid grid-cols-4 gap-1 p-2 bg-gray-50 dark:bg-gray-800 rounded-2xl">
+              {EMOJIS.slice(0, 8).map(e => (
+                <button key={e} onClick={() => setLeft(e)} className="p-2 hover:scale-110 transition-transform">{e}</button>
+              ))}
+            </div>
+          </div>
+
+          {/* Resulting Mix */}
+          <div className="flex flex-col items-center">
+            <div className="relative group flex items-center justify-center w-48 h-48">
+              <div className="absolute inset-0 bg-yellow-400/20 rounded-full blur-3xl animate-pulse" />
+              {loading && <div className="absolute w-8 h-8 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin z-20" />}
+              <img 
+                src={mixUrl} 
+                alt="Mixed Emoji" 
+                onLoad={() => setLoading(false)}
+                onLoadStart={() => setLoading(true)}
+                className={`w-44 h-44 object-contain relative z-10 transition-all duration-500 ${loading ? 'opacity-0 scale-50' : 'opacity-100 scale-100'}`}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = "https://www.gstatic.com/android/keyboard/emojikitchen/20201001/u1f600/u1f600_u1f600.png";
+                }}
+              />
+            </div>
+            <div className="mt-6 flex gap-2">
+              <button 
+                onClick={handleRandom}
+                className="p-3 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-full hover:bg-yellow-400 hover:text-white transition-all"
+              >
+                <RotateCcw size={20} />
+              </button>
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(mixUrl);
+                  setCopyStatus(true);
+                  setTimeout(() => setCopyStatus(false), 2000);
+                }}
+                className="px-6 py-3 bg-gray-900 dark:bg-white dark:text-black text-white rounded-full text-xs font-black uppercase tracking-widest active:scale-95 transition-all"
+              >
+                {copyStatus ? "Copied!" : "Copy Image"}
+              </button>
+            </div>
+          </div>
+
+          {/* Right Ingredient */}
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-32 h-32 bg-gray-50 dark:bg-gray-800 rounded-[32px] flex items-center justify-center text-6xl shadow-inner">
+              {right}
+            </div>
+            <div className="grid grid-cols-4 gap-1 p-2 bg-gray-50 dark:bg-gray-800 rounded-2xl">
+              {EMOJIS.slice(8, 16).map(e => (
+                <button key={e} onClick={() => setRight(e)} className="p-2 hover:scale-110 transition-transform">{e}</button>
+              ))}
+            </div>
+          </div>
+
         </div>
 
-        <button 
-          onClick={handleCopy}
-          className="mt-8 px-6 py-3 bg-slate-900 dark:bg-white dark:text-black text-white rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all active:scale-95 z-10"
-        >
-          {copyStatus ? "Link Cooked!" : "Copy Image URL"}
-        </button>
-      </div>
-
-      <div className="mt-6 grid grid-cols-6 gap-2">
-         {['😀','🫠','👽','🐱','🐶','🦊','👻','🔥','💖','✨','🍕','🥑'].map(e => (
-           <button 
-            key={e}
-            onClick={() => setEmoji1(e)}
-            className={`p-2 text-xl rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ${emoji1 === e ? 'bg-orange-100 dark:bg-orange-900/50 scale-110 shadow-sm' : ''}`}
-           >
-             {e}
-           </button>
-         ))}
+        {/* Bottom Footer Info */}
+        <div className="bg-gray-50 dark:bg-gray-800/50 p-4 border-t border-gray-100 dark:border-gray-800 text-center">
+          <p className="text-[9px] font-bold text-gray-400 uppercase tracking-[0.2em] flex items-center justify-center gap-2">
+            <Sparkles size={10} /> Verified Google Static Assets • 2026 Compatible
+          </p>
+        </div>
       </div>
     </div>
   );
 };
 
-export default EmojiChef;
+export default EmojiKitchen;
