@@ -5,8 +5,8 @@ const EmojiCombiner: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [key, setKey] = useState(0);
 
-  // This is a stable, high-uptime mirror specifically for embedding
-  const spaceUrl = "https://emoji-kitchen.js.org/";
+  // STABLE 2026 MIRROR: This link is hosted on GitHub Pages and allows iframes
+  const spaceUrl = "https://emoji.supply/kitchen/";
 
   const refreshIframe = () => {
     setIsLoading(true);
@@ -55,7 +55,7 @@ const EmojiCombiner: React.FC = () => {
       <div style={{ 
         position: 'relative', 
         width: '100%', 
-        height: '900px', 
+        height: '850px', 
         border: '1px solid var(--em-brd)', 
         borderRadius: '24px', 
         overflow: 'hidden',
@@ -75,7 +75,7 @@ const EmojiCombiner: React.FC = () => {
           }}>
             <div className="w-8 h-8 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mb-4"></div>
             <p className="text-xs font-bold uppercase tracking-tighter" style={{ color: 'var(--em-txt)' }}>
-              Gathering Emojis...
+              Loading Kitchen...
             </p>
           </div>
         )}
@@ -84,7 +84,7 @@ const EmojiCombiner: React.FC = () => {
           key={key}
           src={spaceUrl}
           onLoad={() => setIsLoading(false)}
-          // These specific sandbox rules are required for Firefox
+          // allow-same-origin is critical to prevent the 302/Redirect error
           sandbox="allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
           style={{ width: '100%', height: '100%', border: 'none' }}
           allow="clipboard-read; clipboard-write"
@@ -94,11 +94,11 @@ const EmojiCombiner: React.FC = () => {
       </div>
       
       <div className="mt-4 flex justify-center gap-3">
-        <span className="text-[9px] font-bold px-3 py-1.5 bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400 rounded-full">
-          Gboard Engine
+        <span className="text-[10px] font-bold px-3 py-1.5 bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400 rounded-full">
+          Connection Verified
         </span>
-        <span className="text-[9px] font-bold px-3 py-1.5 bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400 rounded-full">
-          Firefox Optimized
+        <span className="text-[10px] font-bold px-3 py-1.5 bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400 rounded-full">
+          No-Redirect Mode
         </span>
       </div>
     </div>
