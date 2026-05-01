@@ -11,40 +11,43 @@ export default function TypingTest() {
   const [isFinished, setIsFinished] = useState(false);
   const [seconds, setSeconds] = useState(0);
   
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  // FIXED: Changed NodeJS.Timeout to number for browser compatibility
+  const timerRef = useRef<number | null>(null);
 
-  // Logic: Real-time validation and Timer Management
   useEffect(() => {
+    // Start timer on first keystroke
     if (input.length === 1 && !startTime) {
       setStartTime(Date.now());
-      timerRef.current = setInterval(() => {
+      // Explicitly use window.setInterval to ensure it returns a number
+      timerRef.current = window.setInterval(() => {
         setSeconds((s) => s + 1);
       }, 1000);
     }
 
+    // Accuracy Calculation
     if (input.length > 0) {
-      // Calculate Accuracy
       const correctChars = input.split('').filter((char, i) => char === SAMPLE_TEXT[i]).length;
       setAccuracy(Math.round((correctChars / input.length) * 100));
     }
 
+    // Completion Logic
     if (input === SAMPLE_TEXT && !isFinished) {
-      if (timerRef.current) clearInterval(timerRef.current);
+      if (timerRef.current) window.clearInterval(timerRef.current);
       setIsFinished(true);
       
       const timeTakenMinutes = (Date.now() - (startTime || Date.now())) / 1000 / 60;
-      // Standard WPM: (characters / 5) / time
       const calculatedWpm = Math.round((SAMPLE_TEXT.length / 5) / timeTakenMinutes);
       setWpm(calculatedWpm);
     }
 
+    // Cleanup on unmount
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
+      if (timerRef.current) window.clearInterval(timerRef.current);
     };
   }, [input, startTime, isFinished]);
 
   const resetTest = () => {
-    if (timerRef.current) clearInterval(timerRef.current);
+    if (timerRef.current) window.clearInterval(timerRef.current);
     setInput('');
     setStartTime(null);
     setWpm(0);
@@ -53,10 +56,9 @@ export default function TypingTest() {
     setSeconds(0);
   };
 
-  // Logic: Character-by-character color grading
   const renderText = () => {
     return SAMPLE_TEXT.split('').map((char, index) => {
-      let color = "text-slate-400"; // Default
+      let color = "text-slate-400";
       if (index < input.length) {
         color = input[index] === char ? "text-emerald-500" : "text-rose-500 bg-rose-500/10";
       }
@@ -94,7 +96,7 @@ export default function TypingTest() {
         <div className="mt-6 flex justify-between items-center">
           <div className="flex items-center gap-2 text-slate-400">
             <Keyboard size={16} />
-            <span className="text-[10px] font-black uppercase tracking-widest">Mechanical Logic Engine</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Engine v2.1 Verified</span>
           </div>
           <button 
             onClick={resetTest}
@@ -105,12 +107,11 @@ export default function TypingTest() {
         </div>
       </div>
 
-      {/* Result Overlay */}
       {isFinished && (
         <div className="bg-emerald-500 text-white p-6 rounded-3xl shadow-xl shadow-emerald-500/20 flex justify-between items-center animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div>
             <h3 className="font-black uppercase tracking-tighter text-xl">Test Complete!</h3>
-            <p className="text-emerald-100 text-xs font-bold uppercase">Great job! You typed at {wpm} words per minute.</p>
+            <p className="text-emerald-100 text-xs font-bold uppercase">Great job! Performance score: {wpm} WPM</p>
           </div>
           <div className="text-4xl font-black">{wpm} <span className="text-sm">WPM</span></div>
         </div>
