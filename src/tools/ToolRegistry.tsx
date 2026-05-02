@@ -1,3 +1,4 @@
+import MediaClips from './MediaClips'
 import AudioDownload from './AudioDownload'
 import AIChatbot from './AIChatbot'
 import UserReport from './UserReport'
@@ -304,6 +305,7 @@ export const ToolComponents: Record<string, React.FC> = {
 'ai-chatbot': AIChatbot,
 'report': UserReport,
 'audio-downloader': AudioDownload,
+'clips-downloder': MediaClips,
 };
 
 export const getToolComponent = (id: string) => {
