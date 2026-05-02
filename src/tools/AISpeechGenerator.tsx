@@ -4,7 +4,7 @@ const AISpeechGenerator: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const spaceUrl = "https://mrfakename-e2-f5-tts.hf.space";
 
-  // Use 'any' cast to prevent Vercel build errors (TS2339)
+  // Using 'any' cast to bypass Vercel build checks for custom elements
   const GradioApp = 'gradio-app' as any;
 
   useEffect(() => {
@@ -14,8 +14,8 @@ const AISpeechGenerator: React.FC = () => {
     script.async = true;
     
     script.onload = () => {
-      // Allow a moment for the custom element to register in the DOM
-      setTimeout(() => setIsLoading(false), 500);
+      // Small delay to ensure the UI is ready after script load
+      setTimeout(() => setIsLoading(false), 800);
     };
     
     document.head.appendChild(script);
@@ -31,44 +31,55 @@ const AISpeechGenerator: React.FC = () => {
     <div className="p-4 max-w-6xl mx-auto font-sans dark:bg-slate-950 transition-colors min-h-screen">
       <style>
         {`
-          :root { --tts-bg: #ffffff; --tts-border: #e5e7eb; }
+          :root { --tts-bg: #ffffff; --tts-border: #e5e7eb; --tts-accent: #06b6d4; }
           @media (prefers-color-scheme: dark) {
-            :root { --tts-bg: #0f172a; --tts-border: #1e293b; }
+            :root { --tts-bg: #0f172a; --tts-border: #1e293b; --tts-accent: #22d3ee; }
           }
           
           gradio-app {
-            border-radius: 20px;
+            border-radius: 24px;
             overflow: hidden;
             border: 1px solid var(--tts-border);
             background: var(--tts-bg);
             min-height: 700px;
             display: block;
-            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
           }
         `}
       </style>
 
       <div className="mb-8 text-center">
-        <h2 className="text-3xl font-black bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent uppercase tracking-tight">
-          Neural Text-to-Speech
+        <h2 className="text-3xl font-black bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-transparent uppercase tracking-tight">
+          Neural Voice Studio
         </h2>
         <p className="text-gray-500 dark:text-gray-400 mt-2 font-medium">
-          Advanced E2-F5 Voice Synthesis
+          Premium Text-to-Speech Synthesis
         </p>
       </div>
 
       <div className="relative w-full">
-        {/* Professional Loading State */}
+        {/* Positive "Waking Up" Loading State */}
         {isLoading && (
-          <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white dark:bg-slate-950 rounded-2xl h-[700px]">
-            <div className="w-10 h-10 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
-            <p className="mt-4 text-sm font-bold text-slate-600 dark:text-slate-400 animate-pulse">
-              Connecting to AI Model...
-            </p>
+          <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white dark:bg-slate-950 rounded-3xl h-[700px]">
+            <div className="flex flex-col items-center gap-6">
+               <div className="relative">
+                  <div className="w-16 h-16 border-4 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin"></div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-2 h-2 bg-cyan-500 rounded-full animate-ping"></div>
+                  </div>
+               </div>
+               <div className="text-center">
+                 <p className="text-lg font-bold text-slate-800 dark:text-slate-200">
+                   Waking up the Voice Engine...
+                 </p>
+                 <p className="text-xs text-slate-500 mt-1">
+                   Preparing neural models for high-quality speech
+                 </p>
+               </div>
+            </div>
           </div>
         )}
 
-        {/* The Gradio Web Component */}
         <GradioApp 
           src={spaceUrl} 
           theme_mode="auto"
@@ -76,10 +87,12 @@ const AISpeechGenerator: React.FC = () => {
         />
       </div>
 
-      <div className="mt-8 text-center">
-        <p className="text-[10px] text-gray-400 uppercase tracking-widest">
-          Continuous Project Update • Tool 154+ Verified
+      <div className="mt-10 flex justify-center items-center gap-4">
+        <div className="h-[1px] w-12 bg-slate-200 dark:bg-slate-800"></div>
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
+          Free & Unlimited Access
         </p>
+        <div className="h-[1px] w-12 bg-slate-200 dark:bg-slate-800"></div>
       </div>
     </div>
   );
