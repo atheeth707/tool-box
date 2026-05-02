@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 const AIFaceSwap: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [loadStatus, setLoadStatus] = useState("Waking up the engine...");
-  const spaceUrl = "https://linoyts-flux2-klein-face-swap.hf.space";
+  const spaceUrl = "https://alsv-faceswapall.hf.space";
   
   // Use any to avoid TS2503 'NodeJS' namespace error
   const timerRef = useRef<any>(null);
