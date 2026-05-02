@@ -14,20 +14,26 @@ const AIImageGenerator: React.FC = () => {
           }
         `}
       </style>
-      <h2 className="text-2xl font-black text-center mb-4 dark:text-white">AI Image Generator</h2>
+      <h2 className="text-2xl font-black text-center mb-4 dark:text-white uppercase tracking-tight">AI Image Generator</h2>
       <div style={{ 
         position: 'relative', width: '100%', height: '600px', 
         border: '1px solid var(--img-border)', borderRadius: '16px', 
         overflow: 'hidden', backgroundColor: 'var(--img-bg)' 
       }}>
         {isLoading && (
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justify-content: 'center', background: 'var(--img-bg)', zIndex: 1 }}>
-            <p className="text-sm" style={{ color: 'var(--img-text)' }}>Loading Image Engine...</p>
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--img-bg)', zIndex: 1 }}>
+            <p className="text-sm font-bold" style={{ color: 'var(--img-text)' }}>Loading Image Engine...</p>
           </div>
         )}
-        <iframe src={spaceUrl} onLoad={() => setIsLoading(false)} style={{ width: '100%', height: '100%', border: 'none' }} allowFullScreen />
+        <iframe 
+          src={spaceUrl} 
+          onLoad={() => setIsLoading(false)} 
+          style={{ width: '100%', height: '100%', border: 'none' }} 
+          allowFullScreen 
+        />
       </div>
     </div>
   );
 };
+
 export default AIImageGenerator;
