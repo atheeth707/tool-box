@@ -1,3 +1,4 @@
+import Textbooks2 from './Textbooks2'
 import Textbooks1 from './Textbooks1'
 import Textbooks from './Textbooks'
 import MediaClips from './MediaClips'
@@ -310,6 +311,7 @@ export const ToolComponents: Record<string, React.FC> = {
 'clips-downloder': MediaClips,
 '12thbooks': Textbooks,
 '11thbooks': Textbooks1,
+'10thbooks': Textbooks2,
 };
 
 export const getToolComponent = (id: string) => {
