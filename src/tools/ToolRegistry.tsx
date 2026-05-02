@@ -1,4 +1,4 @@
-import 12thbooks from './12thbooks'
+import twelvethbooks from './twelvethbooks'
 import MediaClips from './MediaClips'
 import AudioDownload from './AudioDownload'
 import AIChatbot from './AIChatbot'
@@ -307,7 +307,7 @@ export const ToolComponents: Record<string, React.FC> = {
 'report': UserReport,
 'audio-downloader': AudioDownload,
 'clips-downloder': MediaClips,
-'12thbooks': 12thbooks,
+'12thbooks': twelvethbooks,
 };
 
 export const getToolComponent = (id: string) => {
