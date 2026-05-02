@@ -50,7 +50,7 @@ const AISpeechGenerator: React.FC = () => {
 
       <div className="mb-8 text-center">
         <h2 className="text-3xl font-black bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-transparent uppercase tracking-tight">
-          Neural Voice Studio
+          Voice Studio
         </h2>
         <p className="text-gray-500 dark:text-gray-400 mt-2 font-medium">
           Premium Text-to-Speech Synthesis
@@ -73,7 +73,7 @@ const AISpeechGenerator: React.FC = () => {
                    Waking up the Voice Engine...
                  </p>
                  <p className="text-xs text-slate-500 mt-1">
-                   Preparing neural models for high-quality speech
+                   Preparing models for high-quality speech
                  </p>
                </div>
             </div>
