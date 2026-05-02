@@ -1,3 +1,4 @@
+import AISpeechGenerator from './AISpeechGenerator'
 import Textbooks2 from './Textbooks2'
 import Textbooks1 from './Textbooks1'
 import Textbooks from './Textbooks'
@@ -312,6 +313,7 @@ export const ToolComponents: Record<string, React.FC> = {
 '12thbooks': Textbooks,
 '11thbooks': Textbooks1,
 '10thbooks': Textbooks2,
+'ai-speech-generator': AISpeechGenerator,
 };
 
 export const getToolComponent = (id: string) => {
