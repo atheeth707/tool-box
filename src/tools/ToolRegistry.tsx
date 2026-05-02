@@ -1,3 +1,4 @@
+import AudioDownload from './AudioDownload'
 import AIChatbot from './AIChatbot'
 import UserReport from './UserReport'
 import AIImageGenerator from './AIImageGenerator'
@@ -302,6 +303,7 @@ export const ToolComponents: Record<string, React.FC> = {
 'ai-image-generator': AIImageGenerator,
 'ai-chatbot': AIChatbot,
 'report': UserReport,
+'audio-downloader': AudioDownload,
 };
 
 export const getToolComponent = (id: string) => {
