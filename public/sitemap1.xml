@@ -4,179 +4,180 @@
   <url><loc>https://tool-box-free.vercel.app/</loc><priority>1.0</priority></url>
   <url><loc>https://tool-box-free.vercel.app/report</loc><priority>0.5</priority></url>
 
-  <!-- AI & Generative Tools -->
-  <url><loc>https://tool-box-free.vercel.app/tool/ai-chatbot</loc><priority>0.9</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/ai-image-generator</loc><priority>0.9</priority></url>
+  <!-- Educational Resources -->
+  <url><loc>https://tool-box-free.vercel.app/tool/10thbooks</loc><priority>0.8</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/11thbooks</loc><priority>0.8</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/12thbooks</loc><priority>0.8</priority></url>
+
+  <!-- AI & Creative Tools -->
+  <url><loc>https://tool-box-free.vercel.app/tool/ai-background-remover</loc><priority>0.8</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/ai-chatbot</loc><priority>0.8</priority></url>
   <url><loc>https://tool-box-free.vercel.app/tool/ai-content-tools</loc><priority>0.8</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/ai-image-generator</loc><priority>0.8</priority></url>
   <url><loc>https://tool-box-free.vercel.app/tool/ai-image-tools</loc><priority>0.8</priority></url>
   <url><loc>https://tool-box-free.vercel.app/tool/ai-video-tools</loc><priority>0.8</priority></url>
   <url><loc>https://tool-box-free.vercel.app/tool/ai-website-tools</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/ai-background-remover</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/instagram-caption-generator</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/meme-generator</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/caption-formatter</loc><priority>0.8</priority></url>
-
-  <!-- P2P Networking & Collaboration -->
-  <url><loc>https://tool-box-free.vercel.app/tool/p2p-file-sharing</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/p2p-text-chat</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/secure-room-join</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/clipboard-sharing</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/image-sharing-p2p</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/connection-status-ui</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/qr-code-join-room</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/drag-drop-file-send</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/multi-user-room</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/encryption-layer</loc><priority>0.7</priority></url>
-
-  <!-- Games & Interaction -->
-  <url><loc>https://tool-box-free.vercel.app/tool/reaction-test</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/typing-test</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/cps-counter</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/memory-match</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/number-guess</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/rock-paper-scissors</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/quiz</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/spin-wheel</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/challenges</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/truth-dare</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/dice-roller</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/coin-flip</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/yes-no-generator</loc><priority>0.6</priority></url>
-
-  <!-- Developer & Code Tools -->
-  <url><loc>https://tool-box-free.vercel.app/tool/regex-tester</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/diff-checker</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/code-beautifier</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/code-minifier</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/jwt-decoder</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/cron-generator</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/sql-formatter</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/json-formatter</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/json-to-csv</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/csv-to-json</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/xml-to-json</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/json-to-xml</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/base64-encoder</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/base64-file-encoder</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/base64-file-decoder</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/md5-generator</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/sha256-generator</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/uuid-generator</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/token-generator</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/encryption-demo</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/password-generator</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/password-strength</loc><priority>0.8</priority></url>
-
-  <!-- Image & Video Tools -->
-  <url><loc>https://tool-box-free.vercel.app/tool/image-compressor</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/image-cropper</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/image-resizer</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/image-rotator</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/image-flipper</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/png-to-jpg</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/jpg-to-png</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/image-to-base64</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/base64-to-image</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/image-to-pdf</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/yt-thumbnail-downloader</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/thumbnail-preview</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/video-metadata</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/video-embed</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/audio-extractor</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/video-to-gif</loc><priority>0.8</priority></url>
-
-  <!-- Text & SEO Tools -->
-  <url><loc>https://tool-box-free.vercel.app/tool/word-counter</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/text-case-converter</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/remove-duplicate-lines</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/slug-generator</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/text-reverser</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/text-sorter</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/lorem-ipsum-generator</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/html-encoder</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/url-encoder</loc><priority>0.8</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/utm-builder</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/meta-tag-generator</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/open-graph-preview</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/keyword-density-checker</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/robots-txt-generator</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/sitemap-builder</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/yt-title-generator</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/hashtag-generator</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/font-style-generator</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/text-glitch</loc><priority>0.7</priority></url>
   <url><loc>https://tool-box-free.vercel.app/tool/ascii-art-generator</loc><priority>0.7</priority></url>
   <url><loc>https://tool-box-free.vercel.app/tool/ascii-banner</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/email-extractor</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/meme-generator</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/font-style-generator</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/text-glitch</loc><priority>0.7</priority></url>
 
-  <!-- Calculators & Converters -->
+  <!-- Media Tools & Downloaders -->
+  <url><loc>https://tool-box-free.vercel.app/tool/audio-downloader</loc><priority>0.8</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/audio-extractor</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/clips-downloder</loc><priority>0.8</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/yt-thumbnail-downloader</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/yt-title-generator</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/video-embed</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/video-metadata</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/video-to-gif</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/thumbnail-preview</loc><priority>0.7</priority></url>
+
+  <!-- Developer & Utility -->
+  <url><loc>https://tool-box-free.vercel.app/tool/base64-encoder</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/base64-file-decoder</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/base64-file-encoder</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/base64-to-image</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/code-beautifier</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/code-minifier</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/cron-generator</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/csv-to-json</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/diff-checker</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/html-encoder</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/json-formatter</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/json-to-csv</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/json-to-xml</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/jwt-decoder</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/markdown-previewer</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/md5-generator</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/regex-tester</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/sha256-generator</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/sitemap-builder</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/sql-formatter</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/xml-to-json</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/uuid-generator</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/token-generator</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/robots-txt-generator</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/url-encoder</loc><priority>0.7</priority></url>
+
+  <!-- Networking & P2P -->
+  <url><loc>https://tool-box-free.vercel.app/tool/browser-info</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/connection-status-ui</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/drag-drop-file-send</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/encryption-demo</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/encryption-layer</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/http-header-parser</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/image-sharing-p2p</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/ip-checker</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/multi-user-room</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/p2p-file-sharing</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/p2p-text-chat</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/ping-tool</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/qr-code-join-room</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/secure-room-join</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/speed-test</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/user-agent-parser</loc><priority>0.7</priority></url>
+
+  <!-- Calculators & Math -->
   <url><loc>https://tool-box-free.vercel.app/tool/age-calculator</loc><priority>0.7</priority></url>
   <url><loc>https://tool-box-free.vercel.app/tool/basic-calculator</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/scientific-calculator</loc><priority>0.7</priority></url>
   <url><loc>https://tool-box-free.vercel.app/tool/bmi-calculator</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/unit-converter</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/percentage-calculator</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/discount-calculator</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/gst-calculator</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/emi-calculator</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/loan-calculator</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/epoch-to-date</loc><priority>0.7</priority></url>
   <url><loc>https://tool-box-free.vercel.app/tool/date-to-epoch</loc><priority>0.7</priority></url>
   <url><loc>https://tool-box-free.vercel.app/tool/days-between-dates</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/timezone-converter</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/working-days-calculator</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/discount-calculator</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/emi-calculator</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/epoch-to-date</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/gst-calculator</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/loan-calculator</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/percentage-calculator</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/scientific-calculator</loc><priority>0.7</priority></url>
   <url><loc>https://tool-box-free.vercel.app/tool/time-duration-calculator</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/timezone-converter</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/unit-converter</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/working-days-calculator</loc><priority>0.7</priority></url>
   <url><loc>https://tool-box-free.vercel.app/tool/file-size-converter</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/color-converter</loc><priority>0.7</priority></url>
 
-  <!-- Network & System Utilities -->
-  <url><loc>https://tool-box-free.vercel.app/tool/browser-info</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/speed-test</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/ping-tool</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/ip-checker</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/user-agent-parser</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/http-header-parser</loc><priority>0.6</priority></url>
+  <!-- Image Processing -->
+  <url><loc>https://tool-box-free.vercel.app/tool/image-compressor</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/image-cropper</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/image-flipper</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/image-resizer</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/image-rotator</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/image-to-base64</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/image-to-pdf</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/jpg-to-png</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/png-to-jpg</loc><priority>0.7</priority></url>
 
-  <!-- Productivity & Office -->
-  <url><loc>https://tool-box-free.vercel.app/tool/invoice-generator</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/resume-builder</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/notes-app</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/todo-list</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/habit-tracker</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/meeting-timer</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/daily-planner</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/text-notepad</loc><priority>0.7</priority></url>
+  <!-- Games & Randomization -->
+  <url><loc>https://tool-box-free.vercel.app/tool/challenges</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/coin-flip</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/cps-counter</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/dice-roller</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/emoji-combiner</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/memory-match</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/number-guess</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/quiz</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/random-color</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/random-date-generator</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/random-name-picker</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/random-story-generator</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/random-string-generator</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/reaction-test</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/rock-paper-scissors</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/spin-wheel</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/truth-dare</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/typing-test</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/wheel-spinner</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/yes-no-generator</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/nickname-generator</loc><priority>0.7</priority></url>
+
+  <!-- Productivity & SEO -->
+  <url><loc>https://tool-box-free.vercel.app/tool/caption-formatter</loc><priority>0.7</priority></url>
   <url><loc>https://tool-box-free.vercel.app/tool/clipboard-manager</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/clipboard-sharing</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/daily-planner</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/data-sorter</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/duplicate-row-remover</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/email-extractor</loc><priority>0.7</priority></url>
   <url><loc>https://tool-box-free.vercel.app/tool/goal-tracker</loc><priority>0.7</priority></url>
-
-  <!-- Social & Link Tools -->
-  <url><loc>https://tool-box-free.vercel.app/tool/whatsapp-link</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/qr-generator</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/habit-tracker</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/hashtag-generator</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/instagram-caption-generator</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/invoice-generator</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/keyword-density-checker</loc><priority>0.7</priority></url>
   <url><loc>https://tool-box-free.vercel.app/tool/link-preview</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/url-shortener-mock</loc><priority>0.7</priority></url>
   <url><loc>https://tool-box-free.vercel.app/tool/link-qr-code</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/lorem-ipsum-generator</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/meeting-timer</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/notes-app</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/number-formatter</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/open-graph-preview</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/password-generator</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/password-strength</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/remove-duplicate-lines</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/resume-builder</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/slug-generator</loc><priority>0.7</priority></url>
   <url><loc>https://tool-box-free.vercel.app/tool/social-share-generator</loc><priority>0.7</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/fake-chat-generator</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/stopwatch</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/table-generator</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/text-case-converter</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/text-notepad</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/text-reverser</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/text-sorter</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/text-table-generator</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/todo-list</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/url-shortener-mock</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/utm-builder</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/whatsapp-link</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/word-counter</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/countdown-timer</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/pomodoro-timer</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/color-picker</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/color-converter</loc><priority>0.7</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/file-metadata</loc><priority>0.7</priority></url>
 
-  <!-- Random Generators & Misc -->
-  <url><loc>https://tool-box-free.vercel.app/tool/random-color</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/random-string-generator</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/nickname-generator</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/random-number-generator</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/random-name-picker</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/random-date-generator</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/random-story-generator</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/wheel-spinner</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/color-picker</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/file-metadata</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/markdown-previewer</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/table-generator</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/text-table-generator</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/data-sorter</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/duplicate-row-remover</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/number-formatter</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/countdown-timer</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/stopwatch</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/pomodoro-timer</loc><priority>0.6</priority></url>
-  <url><loc>https://tool-box-free.vercel.app/tool/emoji-combiner</loc><priority>0.6</priority></url>
+  <!-- Miscellaneous Tools -->
+  <url><loc>https://tool-box-free.vercel.app/tool/fake-chat-generator</loc><priority>0.6</priority></url>
+  <url><loc>https://tool-box-free.vercel.app/tool/qr-generator</loc><priority>0.6</priority></url>
 </urlset>
