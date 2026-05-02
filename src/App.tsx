@@ -3,6 +3,7 @@ import Layout from './components/Layout';
 import Home from './pages/Home';
 import Category from './pages/Category';
 import ToolPage from './pages/ToolPage';
+import Pricing from './pages/Pricing'; // Added Pricing import
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
           <Route index element={<Home />} />
           <Route path="category/:categoryId" element={<Category />} />
           <Route path="tool/:toolId" element={<ToolPage />} />
+          <Route path="pricing" element={<Pricing />} /> {/* Added Pricing Route */}
         </Route>
       </Routes>
     </BrowserRouter>
