@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 const AISpeechGenerator: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const spaceUrl = "https://mrfakename-e2-f5-tts.hf.space";
+  const spaceUrl = "https://k2-fsa-text-to-speech.hf.space";
 
   // Using 'any' cast to bypass Vercel build checks for custom elements
   const GradioApp = 'gradio-app' as any;
