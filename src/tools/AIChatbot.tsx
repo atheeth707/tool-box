@@ -2,25 +2,15 @@ import React, { useState } from 'react';
 
 const AIChatBot: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
-
-  // Using a fast, reliable Llama-3-8B Space that allows embedding
   const spaceUrl = "https://tencent-hy3-preview.hf.space";
 
   return (
-    <div className="p-4 max-w-6xl mx-auto font-sans dark:bg-slate-950 transition-colors">
+    <div className="p-2 md:p-4 max-w-[1600px] mx-auto font-sans dark:bg-slate-950 transition-colors">
       <style>
         {`
-          :root {
-            --chat-bg: #f9f9f9;
-            --chat-text: #1a1a1a;
-            --chat-border: #ddd;
-          }
+          :root { --chat-bg: #f9f9f9; --chat-text: #1a1a1a; --chat-border: #ddd; }
           @media (prefers-color-scheme: dark) {
-            :root {
-              --chat-bg: #111827;
-              --chat-text: #f3f4f6;
-              --chat-border: #374151;
-            }
+            :root { --chat-bg: #111827; --chat-text: #f3f4f6; --chat-border: #374151; }
           }
         `}
       </style>
@@ -35,30 +25,15 @@ const AIChatBot: React.FC = () => {
       </div>
       
       <div style={{ 
-        position: 'relative', 
-        width: '100%', 
-        height: '900px', 
-        border: '1px solid var(--chat-border)', 
-        borderRadius: '20px', 
-        overflow: 'hidden',
-        backgroundColor: 'var(--chat-bg)',
+        position: 'relative', width: '100%', height: '1000px', 
+        border: '1px solid var(--chat-border)', borderRadius: '20px', 
+        overflow: 'hidden', backgroundColor: 'var(--chat-bg)',
         boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
       }}>
         {isLoading && (
-          <div style={{
-            position: 'absolute',
-            inset: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'var(--chat-bg)',
-            zIndex: 1
-          }}>
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--chat-bg)', zIndex: 1 }}>
             <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-3"></div>
-            <p className="text-xs font-bold" style={{ color: 'var(--chat-text)' }}>
-              Connecting to AI Brain...
-            </p>
+            <p className="text-xs font-bold" style={{ color: 'var(--chat-text)' }}>Connecting to AI Brain...</p>
           </div>
         )}
 
@@ -73,12 +48,8 @@ const AIChatBot: React.FC = () => {
       </div>
       
       <div className="mt-4 flex justify-center gap-4">
-        <span className="text-[9px] font-medium px-2 py-1 bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 rounded-md">
-          UNLIMITED ACCESS
-        </span>
-        <span className="text-[9px] font-medium px-2 py-1 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 rounded-md">
-          OPEN SOURCE
-        </span>
+        <span className="text-[9px] font-medium px-2 py-1 bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 rounded-md">UNLIMITED ACCESS</span>
+        <span className="text-[9px] font-medium px-2 py-1 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 rounded-md">OPEN SOURCE</span>
       </div>
     </div>
   );
