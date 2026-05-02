@@ -28,7 +28,7 @@ const AIFaceSwap: React.FC = () => {
   }, []);
 
   return (
-    <div className="p-2 md:p-4 max-w-full mx-auto font-sans dark:bg-slate-950 transition-colors min-h-screen">
+    <div className="p-2 md:p-4 max-w-full mx-auto font-sans dark:bg-slate-950 transition-colors">
       <style>
         {`
           :root { --fs-bg: #ffffff; --fs-border: #e2e8f0; }
@@ -40,7 +40,7 @@ const AIFaceSwap: React.FC = () => {
             overflow: hidden;
             border: 1px solid var(--fs-border);
             background: var(--fs-bg);
-            min-height: 1000px;
+            min-height: 600px;
             display: block;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
           }
@@ -54,7 +54,7 @@ const AIFaceSwap: React.FC = () => {
 
       <div className="relative w-full">
         {isLoading && (
-          <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white dark:bg-slate-950 rounded-3xl h-[1000px]">
+          <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white dark:bg-slate-950 rounded-3xl h-[600px]">
             <div className="flex flex-col items-center gap-6">
                <div className="relative">
                   <div className="w-16 h-16 border-4 border-orange-500/10 border-t-orange-500 rounded-full animate-spin"></div>
@@ -67,7 +67,7 @@ const AIFaceSwap: React.FC = () => {
             </div>
           </div>
         )}
-        <GradioApp src={spaceUrl} theme_mode="auto" initial_height="1000px" />
+        <GradioApp src={spaceUrl} theme_mode="auto" initial_height="600px" />
       </div>
       <div className="mt-8 text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest">Free & Unlimited Access • Tool 150+</div>
     </div>

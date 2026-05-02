@@ -5,7 +5,7 @@ const AIChatBot: React.FC = () => {
   const spaceUrl = "https://tencent-hy3-preview.hf.space";
 
   return (
-    <div className="p-2 md:p-4 max-w-[1600px] mx-auto font-sans dark:bg-slate-950 transition-colors">
+    <div className="p-2 md:p-4 max-w-full mx-auto font-sans dark:bg-slate-950 transition-colors">
       <style>
         {`
           :root { --chat-bg: #f9f9f9; --chat-text: #1a1a1a; --chat-border: #ddd; }
@@ -25,7 +25,7 @@ const AIChatBot: React.FC = () => {
       </div>
       
       <div style={{ 
-        position: 'relative', width: '100%', height: '1000px', 
+        position: 'relative', width: '100%', height: '600px', 
         border: '1px solid var(--chat-border)', borderRadius: '20px', 
         overflow: 'hidden', backgroundColor: 'var(--chat-bg)',
         boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'

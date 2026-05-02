@@ -16,7 +16,7 @@ const AISpeechGenerator: React.FC = () => {
   }, []);
 
   return (
-    <div className="p-2 md:p-4 max-w-full mx-auto font-sans dark:bg-slate-950 transition-colors min-h-screen">
+    <div className="p-2 md:p-4 max-w-full mx-auto font-sans dark:bg-slate-950 transition-colors">
       <style>
         {`
           :root { --tts-bg: #ffffff; --tts-border: #e5e7eb; --tts-accent: #06b6d4; }
@@ -28,7 +28,7 @@ const AISpeechGenerator: React.FC = () => {
             overflow: hidden;
             border: 1px solid var(--tts-border);
             background: var(--tts-bg);
-            min-height: 900px;
+            min-height: 600px;
             display: block;
             box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
           }
@@ -42,7 +42,7 @@ const AISpeechGenerator: React.FC = () => {
 
       <div className="relative w-full">
         {isLoading && (
-          <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white dark:bg-slate-950 rounded-3xl h-[900px]">
+          <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white dark:bg-slate-950 rounded-3xl h-[600px]">
             <div className="flex flex-col items-center gap-6">
                <div className="relative">
                   <div className="w-16 h-16 border-4 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin"></div>
@@ -55,7 +55,7 @@ const AISpeechGenerator: React.FC = () => {
             </div>
           </div>
         )}
-        <GradioApp src={spaceUrl} theme_mode="auto" initial_height="900px" />
+        <GradioApp src={spaceUrl} theme_mode="auto" initial_height="600px" />
       </div>
 
       <div className="mt-10 flex justify-center items-center gap-4">

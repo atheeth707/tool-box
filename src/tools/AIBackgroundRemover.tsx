@@ -16,7 +16,7 @@ const BackgroundRemoverAI: React.FC = () => {
       </style>
       <h2 className="text-2xl font-black text-center mb-4 bg-gradient-to-r from-emerald-400 to-cyan-500 bg-clip-text text-transparent">AI Background Remover</h2>
       <div style={{ 
-        position: 'relative', width: '100%', height: '1000px', 
+        position: 'relative', width: '100%', height: '600px', 
         border: '1px solid var(--bg-rm-border)', borderRadius: '16px', 
         overflow: 'hidden', backgroundColor: 'var(--bg-rm-surface)' 
       }}>
