@@ -1,30 +1,45 @@
 export default async function handler(req, res) {
+  // 1. Only allow POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({ text: "Method Not Allowed" });
   }
 
   const { prompt, mode } = req.body;
-  if (!prompt) return res.status(400).json({ text: "Prompt required." });
-
   const GEMINI_KEY = process.env.GEMINI_API_KEY;
   const GROQ_KEY = process.env.GROQ_API_KEY;
 
-  // --- HELPER: Attempt Gemini (Multi-Version Support) ---
-  async function tryGemini(version, modelName) {
-    const url = `https://generativelanguage.googleapis.com/${version}/models/${modelName}:generateContent?key=${GEMINI_KEY}`;
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-    });
-    
-    if (!response.ok) throw new Error(`Gemini ${version} failed`);
+  // AI 1: Gemini v1beta (Most flexible)
+  const tryGeminiBeta = async () => {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+      }
+    );
     const data = await response.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text;
-  }
+    if (!response.ok || data.error) throw new Error("Gemini Beta Failed");
+    return data.candidates[0].content.parts[0].text;
+  };
 
-  // --- HELPER: Attempt Groq (Llama 3) ---
-  async function tryGroq() {
+  // AI 2: Gemini v1 (Stable)
+  const tryGeminiStable = async () => {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+      }
+    );
+    const data = await response.json();
+    if (!response.ok || data.error) throw new Error("Gemini Stable Failed");
+    return data.candidates[0].content.parts[0].text;
+  };
+
+  // AI 3: Groq (Llama 3 70B)
+  const tryGroq = async () => {
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: { 
@@ -36,38 +51,32 @@ export default async function handler(req, res) {
         messages: [{ role: "user", content: prompt }]
       })
     });
-    
-    if (!response.ok) throw new Error("Groq failed");
     const data = await response.json();
+    if (!response.ok || data.error) throw new Error("Groq Failed");
     return data.choices[0].message.content;
-  }
+  };
 
-  // --- EXECUTION LOGIC: The Failover Chain ---
+  // --- FAILOVER EXECUTION LOGIC ---
   try {
-    let resultText = null;
-
-    // 1. Try Gemini v1beta (Highest compatibility)
     try {
-      console.log("Attempting Gemini v1beta...");
-      resultText = await tryGemini('v1beta', 'gemini-1.5-flash');
-    } catch (e) {
-      // 2. Try Gemini v1 (Stable) if v1beta fails
+      console.log("Trying AI 1...");
+      const result = await tryGeminiBeta();
+      return res.status(200).json({ text: result, engine: "Gemini Beta" });
+    } catch (e1) {
       try {
-        console.log("v1beta failed, attempting Gemini v1...");
-        resultText = await tryGemini('v1', 'gemini-1.5-flash-latest');
+        console.log("AI 1 failed, Trying AI 2...");
+        const result = await tryGeminiStable();
+        return res.status(200).json({ text: result, engine: "Gemini Stable" });
       } catch (e2) {
-        // 3. Ultimate Fallback: Groq
-        console.log("All Gemini versions failed, falling back to Groq...");
-        resultText = await tryGroq();
+        console.log("AI 2 failed, Trying AI 3 (Ultimate Fallback)...");
+        const result = await tryGroq();
+        return res.status(200).json({ text: result, engine: "Groq Llama" });
       }
     }
-
-    if (!resultText) throw new Error("All AI engines failed to respond.");
-
-    return res.status(200).json({ text: resultText });
-
-  } catch (err) {
-    console.error("Failover Chain Error:", err);
-    return res.status(500).json({ text: "Fatal Error: " + err.message });
+  } catch (finalError) {
+    console.error("All AI engines exhausted.");
+    return res.status(500).json({ 
+      text: "All AI providers are currently unavailable. Please check your API keys in Vercel settings." 
+    });
   }
 }
