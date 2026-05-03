@@ -33,12 +33,19 @@ export default function AgenticAI() {
         body: JSON.stringify({ prompt: input, mode }),
       });
       
-      const text = await res.text();
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch (e) {
-        throw new Error("Server returned invalid response. Check your API keys.");
+      // Prevent JSON parsing errors if the server returns HTML (like a 404 or 500)
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await res.text();
+        console.error("Non-JSON Server Response:", text);
+        throw new Error("Server returned an invalid response (HTML instead of JSON). Make sure your backend API route is running properly.");
+      }
+      
+      const data = await res.json();
+      
+      // If our backend caught an API key issue, throw it to the UI
+      if (!res.ok || data.error) {
+        throw new Error(data.error || "An API connection error occurred.");
       }
       
       setMessages(prev => [...prev, { 
@@ -49,7 +56,7 @@ export default function AgenticAI() {
     } catch (err: any) {
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: err.message,
+        content: `🚨 Error: ${err.message}`,
         type: 'text'
       }]);
     } finally {
@@ -65,12 +72,24 @@ export default function AgenticAI() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ textToSpeak: text }),
       });
+      
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("TTS failed due to an invalid server response.");
+      }
+
       const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
       if (data.data && audioRef.current) {
         audioRef.current.src = data.data;
         audioRef.current.play();
       }
-    } finally { setSpeakingId(null); }
+    } catch (err: any) {
+      alert(err.message);
+    } finally { 
+      setSpeakingId(null); 
+    }
   };
 
   return (

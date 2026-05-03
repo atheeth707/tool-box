@@ -1,16 +1,25 @@
-const { Buffer } = require('buffer');
+import { Buffer } from 'buffer';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: "Method Not Allowed" });
 
   const { prompt, mode = 'chat', textToSpeak } = req.body;
+  
+  // Load API keys
   const keys = {
     gemini: process.env.GEMINI_API_KEY,
     groq: process.env.GROQ_API_KEY,
     hf: process.env.HF_TOKEN,
   };
 
-  // Helper to wake up free models and prevent HTML error responses
+  // 1. Strict Key Validation (Returns clean JSON to frontend if missing)
+  if (textToSpeak || mode === 'image' || mode === 'video') {
+    if (!keys.hf) return res.status(400).json({ error: "HuggingFace token missing. Check your .env file." });
+  }
+  if (mode === 'code' && !keys.groq) return res.status(400).json({ error: "Groq API key missing. Check your .env file." });
+  if (mode === 'chat' && !keys.gemini) return res.status(400).json({ error: "Gemini API key missing. Check your .env file." });
+
+  // Helper to wake up free models
   async function fetchWithRetry(url, options, retries = 3) {
     for (let i = 0; i < retries; i++) {
       try {
@@ -32,6 +41,7 @@ export default async function handler(req, res) {
         method: "POST",
         body: JSON.stringify({ inputs: textToSpeak.substring(0, 500) }),
       });
+      if (!ttsResp.ok) throw new Error(`HF TTS API Error: ${await ttsResp.text()}`);
       const buffer = await ttsResp.arrayBuffer();
       return res.status(200).json({ data: `data:audio/mpeg;base64,${Buffer.from(buffer).toString('base64')}`, type: 'audio' });
     }
@@ -43,6 +53,7 @@ export default async function handler(req, res) {
         method: "POST",
         body: JSON.stringify({ inputs: prompt }),
       });
+      if (!imgResp.ok) throw new Error(`HF Image API Error: ${await imgResp.text()}`);
       const buffer = await imgResp.arrayBuffer();
       return res.status(200).json({ data: `data:image/webp;base64,${Buffer.from(buffer).toString('base64')}`, type: 'image' });
     }
@@ -54,11 +65,12 @@ export default async function handler(req, res) {
         method: "POST",
         body: JSON.stringify({ inputs: prompt }),
       });
+      if (!vidResp.ok) throw new Error(`HF Video API Error: ${await vidResp.text()}`);
       const vidData = await vidResp.json();
-      return res.status(200).json({ data: vidData.output || vidData[0], type: 'video' });
+      return res.status(200).json({ data: vidData.output || vidData[0] || "Video generation failed.", type: 'video' });
     }
 
-    // --- Chat & Code Routing ---
+    // --- Code Generation ---
     if (mode === 'code') {
       const groqResp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
@@ -66,19 +78,22 @@ export default async function handler(req, res) {
         body: JSON.stringify({ model: "llama-3.3-70b-versatile", messages: [{ role: "user", content: prompt }] })
       });
       const groqData = await groqResp.json();
+      if (groqData.error) throw new Error(`Groq API Error: ${groqData.error.message}`);
       return res.status(200).json({ text: groqData.choices[0].message.content });
     }
 
+    // --- Chat Generation ---
     const gemResp = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${keys.gemini}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
     });
     const gemData = await gemResp.json();
+    if (gemData.error) throw new Error(`Gemini API Error: ${gemData.error.message}`);
     return res.status(200).json({ text: gemData.candidates[0].content.parts[0].text });
 
   } catch (err) {
-    // Always return JSON to prevent frontend parsing errors
-    return res.status(500).json({ text: "The AI engine is currently initializing. Please try again." });
+    console.error("Agentic AI Error:", err);
+    return res.status(500).json({ error: err.message || "The AI engine encountered an error." });
   }
 }
