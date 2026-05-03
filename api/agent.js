@@ -9,52 +9,49 @@ export default async function handler(req, res) {
     hf: process.env.HF_TOKEN,
   };
 
-  async function fetchWithRetry(url, options, retries = 3) {
-    for (let i = 0; i < retries; i++) {
-      try {
-        const response = await fetch(url, options);
-        // Status 503 means the model is loading on HF servers
-        if (response.status !== 503) return response;
-        await new Promise(resolve => setTimeout(resolve, 8000));
-      } catch (e) {
-        if (i === retries - 1) throw e;
+  // Improved Fetch with Auto-Retry for "Model Loading" (503) and 404 Fallbacks
+  async function hfFetch(modelId, inputPrompt) {
+    const url = `https://api-inference.huggingface.co/models/${modelId}`;
+    for (let i = 0; i < 3; i++) {
+      const response = await fetch(url, {
+        headers: { Authorization: `Bearer ${keys.hf}`, "Content-Type": "application/json" },
+        method: "POST",
+        body: JSON.stringify({ inputs: inputPrompt }),
+      });
+      
+      if (response.ok) return response;
+      if (response.status === 503) { // Model is loading
+        await new Promise(r => setTimeout(r, 8000));
+        continue;
       }
+      return response; // Return error response to trigger fallback
     }
-    return fetch(url, options);
   }
 
   try {
-    // --- IMAGE: FLUX.1-schnell ---
+    // --- IMAGE GENERATION (With Fallback) ---
     if (mode === 'image') {
-      const imgResp = await fetchWithRetry(
-        "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell",
-        {
-          headers: { Authorization: `Bearer ${keys.hf}`, "Content-Type": "application/json" },
-          method: "POST",
-          body: JSON.stringify({ inputs: prompt }),
-        }
-      );
-      if (!imgResp.ok) throw new Error(`Image API Error: ${imgResp.status}`);
+      let imgResp = await hfFetch("stabilityai/stable-diffusion-xl-base-1.0", prompt);
+      
+      if (!imgResp.ok) { // Fallback to v1.5 if XL is 404 or down
+        imgResp = await hfFetch("runwayml/stable-diffusion-v1-5", prompt);
+      }
+      
+      if (!imgResp.ok) throw new Error(`HF Image Error: ${imgResp.status}`);
       const buffer = await imgResp.arrayBuffer();
       return res.status(200).json({ data: `data:image/png;base64,${Buffer.from(buffer).toString('base64')}`, type: 'image' });
     }
 
-    // --- VIDEO: Stable Video Diffusion ---
+    // --- VIDEO GENERATION (High Availability Model) ---
     if (mode === 'video') {
-      const vidResp = await fetchWithRetry(
-        "https://api-inference.huggingface.co/models/stabilityai/stable-video-diffusion-img2vid-xt",
-        {
-          headers: { Authorization: `Bearer ${keys.hf}`, "Content-Type": "application/json" },
-          method: "POST",
-          body: JSON.stringify({ inputs: prompt }),
-        }
-      );
-      if (!vidResp.ok) throw new Error(`Video API Error: ${vidResp.status}`);
+      const vidResp = await hfFetch("ali-vilab/text-to-video-ms-1.5", prompt);
+      if (!vidResp.ok) throw new Error(`HF Video Error: ${vidResp.status}`);
+      
       const buffer = await vidResp.arrayBuffer();
       return res.status(200).json({ data: `data:video/mp4;base64,${Buffer.from(buffer).toString('base64')}`, type: 'video' });
     }
 
-    // --- CHAT: Gemini 2.5 Flash ---
+    // --- CHAT (Untouched as requested - Gemini 2.5 Flash) ---
     const gemUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${keys.gemini}`;
     const gemResp = await fetch(gemUrl, {
       method: 'POST',
