@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Loader2, MessageSquare, ImageIcon, Video, Trash2, User, Bot, Volume2 } from 'lucide-react';
+import { Send, Loader2, MessageSquare, ImageIcon, Video, Trash2, User, Bot } from 'lucide-react';
 
 export default function AgenticAI() {
   const [prompt, setPrompt] = useState('');
@@ -9,9 +9,7 @@ export default function AgenticAI() {
   });
   const [mode, setMode] = useState<'chat' | 'image' | 'video'>('chat');
   const [loading, setLoading] = useState(false);
-  const [speakingId, setSpeakingId] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
     localStorage.setItem('arena_v5_data', JSON.stringify(messages));
@@ -49,8 +47,8 @@ export default function AgenticAI() {
 
   return (
     <div className="flex h-screen bg-[#050505] text-zinc-100 font-sans">
-      <audio ref={audioRef} hidden />
       <div className="flex-grow flex flex-col items-center">
+        {/* Simple Header */}
         <div className="w-full max-w-5xl p-5 flex justify-between items-center border-b border-white/5 bg-black/40 backdrop-blur-2xl">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 bg-blue-600 rounded flex items-center justify-center font-black text-[10px]">A</div>
@@ -61,6 +59,7 @@ export default function AgenticAI() {
           </button>
         </div>
 
+        {/* Message Area */}
         <div className="w-full max-w-3xl flex-grow overflow-y-auto px-6 py-10 space-y-12" ref={scrollRef}>
           {messages.map((m, i) => (
             <div key={i} className="flex gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -69,18 +68,19 @@ export default function AgenticAI() {
               </div>
               <div className="flex-grow space-y-2 pt-1">
                 {m.type === 'image' ? (
-                  <img src={m.content} className="rounded-2xl border border-white/10 w-full shadow-2xl" alt="AI" />
+                  <img src={m.content} className="rounded-2xl border border-white/10 w-full shadow-2xl" alt="AI Gen" />
                 ) : m.type === 'video' ? (
-                  <video src={m.content} controls autoPlay loop className="rounded-2xl border border-white/10 w-full shadow-2xl" />
+                  <video src={m.content} controls autoPlay loop muted playsInline className="rounded-2xl border border-white/10 w-full shadow-2xl" />
                 ) : (
                   <div className="text-zinc-300 bg-zinc-900/20 p-4 rounded-xl border border-white/5">{m.content}</div>
                 )}
               </div>
             </div>
           ))}
-          {loading && <div className="flex items-center gap-2 text-zinc-600 text-xs animate-pulse"><Loader2 size={14} className="animate-spin"/> Processing {mode}...</div>}
+          {loading && <div className="flex items-center gap-2 text-zinc-600 text-xs animate-pulse"><Loader2 size={14} className="animate-spin"/> AI is working on your {mode}...</div>}
         </div>
 
+        {/* Input Controls */}
         <div className="w-full max-w-3xl p-6 pb-12">
           <div className="bg-[#0f0f0f] border border-white/10 rounded-[24px] p-2">
             <div className="flex gap-1 mb-2 px-1">
@@ -89,14 +89,14 @@ export default function AgenticAI() {
                 { id: 'image', icon: <ImageIcon size={12}/> },
                 { id: 'video', icon: <Video size={12}/> }
               ].map(t => (
-                <button key={t.id} onClick={() => setMode(t.id as any)} className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest transition-all ${mode === t.id ? 'bg-blue-600 text-white' : 'text-zinc-600 hover:text-zinc-300'}`}>
+                <button key={t.id} onClick={() => setMode(t.id as any)} className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest transition-all ${mode === t.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-zinc-600 hover:text-zinc-300'}`}>
                   {t.icon} {t.id}
                 </button>
               ))}
             </div>
             <div className="flex items-end gap-2 px-3 pb-1">
-              <textarea rows={1} value={prompt} onChange={e => setPrompt(e.target.value)} onKeyDown={e => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())} placeholder={`Prompt for ${mode}...`} className="flex-grow bg-transparent p-2 outline-none text-sm text-zinc-100" />
-              <button onClick={handleSend} className="bg-white text-black p-2.5 rounded-full"><Send size={18} /></button>
+              <textarea rows={1} value={prompt} onChange={e => setPrompt(e.target.value)} onKeyDown={e => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())} placeholder={`Describe your ${mode}...`} className="flex-grow bg-transparent p-2 outline-none text-sm text-zinc-100" />
+              <button onClick={handleSend} className="bg-white text-black p-2.5 rounded-full hover:scale-105 active:scale-95 transition-all"><Send size={18} /></button>
             </div>
           </div>
         </div>

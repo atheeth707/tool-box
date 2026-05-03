@@ -3,7 +3,7 @@ import { Buffer } from 'buffer';
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: "Method Not Allowed" });
 
-  const { prompt, mode = 'chat', textToSpeak } = req.body;
+  const { prompt, mode = 'chat' } = req.body;
   const keys = {
     gemini: process.env.GEMINI_API_KEY,
     hf: process.env.HF_TOKEN,
@@ -13,8 +13,9 @@ export default async function handler(req, res) {
     for (let i = 0; i < retries; i++) {
       try {
         const response = await fetch(url, options);
+        // Status 503 means the model is loading on HF servers
         if (response.status !== 503) return response;
-        await new Promise(resolve => setTimeout(resolve, 4000));
+        await new Promise(resolve => setTimeout(resolve, 8000));
       } catch (e) {
         if (i === retries - 1) throw e;
       }
@@ -23,53 +24,45 @@ export default async function handler(req, res) {
   }
 
   try {
-    // --- 1. TTS (Hugging Face) ---
-    if (textToSpeak) {
-      const ttsResp = await fetchWithRetry("https://api-inference.huggingface.co/models/microsoft/speecht5_tts", {
-        headers: { Authorization: `Bearer ${keys.hf}`, "Content-Type": "application/json" },
-        method: "POST",
-        body: JSON.stringify({ inputs: textToSpeak.substring(0, 500) }),
-      });
-      if (!ttsResp.ok) throw new Error(`TTS Error: ${ttsResp.status}`);
-      const buffer = await ttsResp.arrayBuffer();
-      return res.status(200).json({ data: `data:audio/mpeg;base64,${Buffer.from(buffer).toString('base64')}`, type: 'audio' });
-    }
-
-    // --- 2. Image (Hugging Face - Stable Diffusion XL via Router) ---
+    // --- IMAGE: FLUX.1-schnell ---
     if (mode === 'image') {
-      const imgResp = await fetchWithRetry("https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0", {
-        headers: { Authorization: `Bearer ${keys.hf}`, "Content-Type": "application/json" },
-        method: "POST",
-        body: JSON.stringify({ inputs: prompt }),
-      });
-      if (!imgResp.ok) throw new Error(`Image API Error: ${imgResp.status}. Verify HF_TOKEN is a 'Read' or 'Write' token.`);
+      const imgResp = await fetchWithRetry(
+        "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell",
+        {
+          headers: { Authorization: `Bearer ${keys.hf}`, "Content-Type": "application/json" },
+          method: "POST",
+          body: JSON.stringify({ inputs: prompt }),
+        }
+      );
+      if (!imgResp.ok) throw new Error(`Image API Error: ${imgResp.status}`);
       const buffer = await imgResp.arrayBuffer();
       return res.status(200).json({ data: `data:image/png;base64,${Buffer.from(buffer).toString('base64')}`, type: 'image' });
     }
 
-    // --- 3. Video (Hugging Face - AnimateDiff) ---
+    // --- VIDEO: Stable Video Diffusion ---
     if (mode === 'video') {
-      const vidResp = await fetchWithRetry("https://api-inference.huggingface.co/models/guoyww/AnimateDiff", {
-        headers: { Authorization: `Bearer ${keys.hf}`, "Content-Type": "application/json" },
-        method: "POST",
-        body: JSON.stringify({ inputs: prompt }),
-      });
-      if (!vidResp.ok) throw new Error(`Video API Error: ${vidResp.status}. Model may be loading.`);
+      const vidResp = await fetchWithRetry(
+        "https://api-inference.huggingface.co/models/stabilityai/stable-video-diffusion-img2vid-xt",
+        {
+          headers: { Authorization: `Bearer ${keys.hf}`, "Content-Type": "application/json" },
+          method: "POST",
+          body: JSON.stringify({ inputs: prompt }),
+        }
+      );
+      if (!vidResp.ok) throw new Error(`Video API Error: ${vidResp.status}`);
       const buffer = await vidResp.arrayBuffer();
       return res.status(200).json({ data: `data:video/mp4;base64,${Buffer.from(buffer).toString('base64')}`, type: 'video' });
     }
 
-    // --- 4. Chat (Google Gemini 2.5 Flash - NEWEST) ---
-    // gemini-1.5 is retired; using the stable 2.5 release
+    // --- CHAT: Gemini 2.5 Flash ---
     const gemUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${keys.gemini}`;
     const gemResp = await fetch(gemUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
     });
-    
     const gemData = await gemResp.json();
-    if (gemData.error) throw new Error(`Gemini Error: ${gemData.error.message}`);
+    if (gemData.error) throw new Error(gemData.error.message);
     return res.status(200).json({ text: gemData.candidates[0].content.parts[0].text });
 
   } catch (err) {
