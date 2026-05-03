@@ -9,49 +9,51 @@ export default async function handler(req, res) {
     hf: process.env.HF_TOKEN,
   };
 
-  // Improved Fetch with Auto-Retry for "Model Loading" (503) and 404 Fallbacks
-  async function hfFetch(modelId, inputPrompt) {
-    const url = `https://api-inference.huggingface.co/models/${modelId}`;
-    for (let i = 0; i < 3; i++) {
-      const response = await fetch(url, {
+  async function fetchHF(modelId, input) {
+    const response = await fetch(`https://api-inference.huggingface.co/models/${modelId}`, {
+      headers: { Authorization: `Bearer ${keys.hf}`, "Content-Type": "application/json" },
+      method: "POST",
+      body: JSON.stringify({ inputs: input }),
+    });
+
+    // If model is loading, wait and retry once
+    if (response.status === 503) {
+      await new Promise(r => setTimeout(r, 10000)); 
+      return fetch(`https://api-inference.huggingface.co/models/${modelId}`, {
         headers: { Authorization: `Bearer ${keys.hf}`, "Content-Type": "application/json" },
         method: "POST",
-        body: JSON.stringify({ inputs: inputPrompt }),
+        body: JSON.stringify({ inputs: input }),
       });
-      
-      if (response.ok) return response;
-      if (response.status === 503) { // Model is loading
-        await new Promise(r => setTimeout(r, 8000));
-        continue;
-      }
-      return response; // Return error response to trigger fallback
     }
+    return response;
   }
 
   try {
-    // --- IMAGE GENERATION (With Fallback) ---
+    // --- IMAGE GENERATION (Reliable Model: SD v1.5) ---
     if (mode === 'image') {
-      let imgResp = await hfFetch("stabilityai/stable-diffusion-xl-base-1.0", prompt);
-      
-      if (!imgResp.ok) { // Fallback to v1.5 if XL is 404 or down
-        imgResp = await hfFetch("runwayml/stable-diffusion-v1-5", prompt);
-      }
-      
+      const imgResp = await fetchHF("runwayml/stable-diffusion-v1-5", prompt);
       if (!imgResp.ok) throw new Error(`HF Image Error: ${imgResp.status}`);
+      
       const buffer = await imgResp.arrayBuffer();
-      return res.status(200).json({ data: `data:image/png;base64,${Buffer.from(buffer).toString('base64')}`, type: 'image' });
+      return res.status(200).json({ 
+        data: `data:image/png;base64,${Buffer.from(buffer).toString('base64')}`, 
+        type: 'image' 
+      });
     }
 
-    // --- VIDEO GENERATION (High Availability Model) ---
+    // --- VIDEO GENERATION (Reliable Model: ModelScope) ---
     if (mode === 'video') {
-      const vidResp = await hfFetch("ali-vilab/text-to-video-ms-1.5", prompt);
+      const vidResp = await fetchHF("damo-vilab/modelscope-damo-text-to-video", prompt);
       if (!vidResp.ok) throw new Error(`HF Video Error: ${vidResp.status}`);
       
       const buffer = await vidResp.arrayBuffer();
-      return res.status(200).json({ data: `data:video/mp4;base64,${Buffer.from(buffer).toString('base64')}`, type: 'video' });
+      return res.status(200).json({ 
+        data: `data:video/mp4;base64,${Buffer.from(buffer).toString('base64')}`, 
+        type: 'video' 
+      });
     }
 
-    // --- CHAT (Untouched as requested - Gemini 2.5 Flash) ---
+    // --- CHAT (Untouched - Gemini 2.5 Flash) ---
     const gemUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${keys.gemini}`;
     const gemResp = await fetch(gemUrl, {
       method: 'POST',
