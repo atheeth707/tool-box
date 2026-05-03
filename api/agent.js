@@ -6,16 +6,16 @@ export default async function handler(req, res) {
   const { prompt, mode } = req.body;
 
   if (!prompt) {
-    return res.status(400).json({ text: "No prompt provided." });
+    return res.status(400).json({ text: "Prompt is required." });
   }
 
   try {
     const GEMINI_KEY = process.env.GEMINI_API_KEY;
 
-    // Use Gemini 1.5 Flash on the v1 stable endpoint
+    // Use the -latest suffix which is required for the v1 endpoint
     if (mode === 'chat' || mode === 'code' || !mode) {
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
+        `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_KEY}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -29,19 +29,18 @@ export default async function handler(req, res) {
 
       const data = await response.json();
 
-      // Better error handling for API responses
+      // Catch API-specific errors from Google
       if (data.error) {
         return res.status(data.error.code || 500).json({ 
           text: `Google API Error: ${data.error.message}` 
         });
       }
 
-      // Safeguard against empty candidates
-      const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "The AI returned an empty response.";
+      const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "No response content.";
       return res.status(200).json({ text: aiText });
     }
 
-    // Call Groq for other modes
+    // Groq logic for other modes
     if (mode === 'image' || mode === 'video') {
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
@@ -60,7 +59,7 @@ export default async function handler(req, res) {
     }
 
   } catch (err) {
-    console.error("Critical Backend Error:", err);
-    return res.status(500).json({ text: "System Error: " + err.message });
+    console.error("Fetch Error:", err);
+    return res.status(500).json({ text: "Internal Server Error: " + err.message });
   }
 }
