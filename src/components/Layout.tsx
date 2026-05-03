@@ -8,22 +8,38 @@ export default function Layout() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // We only check session to sync the Navbar profile/credits[cite: 15, 16]
-    supabase.auth.getSession().then(() => {
-      setLoading(false);
-    });
+    // Safety timeout: If Supabase doesn't respond in 5s, stop loading to avoid white screen
+    const timeout = setTimeout(() => setLoading(false), 5000);
+
+    const initAuth = async () => {
+      try {
+        await supabase.auth.getSession();
+      } catch (err) {
+        console.error("Supabase Session Error:", err);
+      } finally {
+        setLoading(false);
+        clearTimeout(timeout);
+      }
+    };
+
+    initAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
       setLoading(false);
+      clearTimeout(timeout);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, []);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-white dark:bg-[#050505] flex flex-col items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-600 mb-4"></div>
+        <p className="text-xs font-bold text-gray-500 uppercase tracking-widest animate-pulse">Initializing Toolbox...</p>
       </div>
     );
   }
@@ -32,7 +48,6 @@ export default function Layout() {
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       <Navbar />
       <main className="flex-grow container mx-auto px-4 py-8">
-        {/* All tools now render here for both guests and logged-in users[cite: 15, 17] */}
         <Outlet />
       </main>
       <Footer />
