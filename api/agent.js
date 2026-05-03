@@ -1,32 +1,43 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-export default async function handler(req: any, res: any) {
-  // 1. Ensure only POST requests are allowed
+export default async function handler(req, res) {
+  // Only allow POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({ text: "Method Not Allowed" });
   }
 
   const { prompt, mode } = req.body;
 
-  // 2. Validation[cite: 1]
   if (!prompt) {
     return res.status(400).json({ text: "No prompt provided." });
   }
 
   try {
-    // ROUTING LOGIC: Map 'mode' from frontend to the correct AI provider[cite: 1]
+    const GEMINI_KEY = process.env.GEMINI_API_KEY;
     
-    // Default to Gemini for standard chat and code[cite: 1]
+    // Use native fetch to call Gemini directly (No install needed)[cite: 1]
     if (mode === 'chat' || mode === 'code' || !mode) {
-      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      const result = await model.generateContent(prompt);
-      const text = result.response.text();
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }]
+          })
+        }
+      );
+
+      const data = await response.json();
       
-      return res.status(200).json({ text: text, model: 'Gemini' });
+      // Handle Google API errors[cite: 1]
+      if (data.error) {
+        throw new Error(data.error.message || "Gemini API Error");
+      }
+
+      const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "No response content.";
+      return res.status(200).json({ text: aiText });
     }
 
-    // Use Groq for specific high-performance tasks if requested[cite: 1]
+    // Call Groq using native fetch[cite: 2]
     if (mode === 'image' || mode === 'video') {
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
@@ -36,27 +47,17 @@ export default async function handler(req: any, res: any) {
         },
         body: JSON.stringify({
           model: "llama3-70b-8192",
-          messages: [{ role: "user", content: `Generate a detailed description for this ${mode} request: ${prompt}` }]
+          messages: [{ role: "user", content: prompt }]
         })
       });
 
-      if (!response.ok) throw new Error(`Groq API returned ${response.status}`);
-      
       const data = await response.json();
-      return res.status(200).json({ 
-        text: data.choices[0].message.content, 
-        model: 'Groq' 
-      });
+      return res.status(200).json({ text: data.choices[0].message.content });
     }
 
-    // Fallback if mode is unknown[cite: 1]
-    return res.status(200).json({ text: "Mode not recognized, but here is a default echo: " + prompt });
-
-  } catch (err: any) {
-    console.error("Agent Error:", err);
-    return res.status(500).json({ 
-      text: "The AI agent failed to route your request. Check your API keys.",
-      error: err.message 
-    });
+  } catch (err) {
+    console.error("Backend Error:", err);
+    // Return JSON to prevent frontend SyntaxError[cite: 1]
+    return res.status(500).json({ text: "System Error: " + err.message });
   }
 }
