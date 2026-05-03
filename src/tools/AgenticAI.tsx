@@ -12,7 +12,7 @@ export default function AgenticAI() {
   const [user, setUser] = useState<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // 1. Initial Load: Auth, Sessions, and Credits
+  // 1. Initial Load: Get User, History List, and Credits
   useEffect(() => {
     const init = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -29,9 +29,9 @@ export default function AgenticAI() {
     init();
   }, []);
 
-  // 2. FIX: Automatically load history when currentSessionId changes
+  // 2. FIX: Load Chat Content when a session is selected
   useEffect(() => {
-    const loadMessages = async () => {
+    const loadChatHistory = async () => {
       if (!currentSessionId) {
         setMessages([]);
         return;
@@ -42,48 +42,43 @@ export default function AgenticAI() {
       if (data) setMessages(data);
       setLoading(false);
     };
-    loadMessages();
+    loadChatHistory();
   }, [currentSessionId]);
-
-  // Scroll to bottom on new messages
-  useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-  }, [messages]);
 
   const handleGenerate = async () => {
     if (!prompt.trim() || !user || credits < 1) return;
-    const userPrompt = prompt;
+    const userMsg = prompt;
     setLoading(true);
     setPrompt('');
 
     try {
-      let sessionId = currentSessionId;
-      // Create session if it's a new chat
-      if (!sessionId) {
-        const { data: ns } = await supabase.from('chat_sessions')
-          .insert({ user_id: user.id, title: userPrompt.substring(0, 30) }).select().single();
-        if (ns) {
-          sessionId = ns.id;
-          setCurrentSessionId(ns.id);
-          setSessions(p => [ns, ...p]);
+      let activeSession = currentSessionId;
+
+      // Create new session if needed
+      if (!activeSession) {
+        const { data } = await supabase.from('chat_sessions')
+          .insert({ user_id: user.id, title: userMsg.slice(0, 30) }).select().single();
+        if (data) {
+          activeSession = data.id;
+          setCurrentSessionId(data.id);
+          setSessions(prev => [data, ...prev]);
         }
       }
 
-      // Save user message to Supabase
-      await supabase.from('chat_messages').insert({ session_id: sessionId, role: 'user', content: userPrompt });
-      setMessages(prev => [...prev, { role: 'user', content: userPrompt }]);
+      // Save user message to DB
+      await supabase.from('chat_messages').insert({ session_id: activeSession, role: 'user', content: userMsg });
+      setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
 
-      const response = await fetch('/api/agent', { 
-        method: 'POST', 
+      const res = await fetch('/api/agent', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: userPrompt }),
+        body: JSON.stringify({ prompt: userMsg }),
       });
+      const data = await res.json();
+      const aiText = data.text || "AI engines failed.";
 
-      const data = await response.json();
-      const aiText = data.text || "AI Engine Error.";
-
-      // Save AI response to Supabase
-      await supabase.from('chat_messages').insert({ session_id: sessionId, role: 'assistant', content: aiText });
+      // Save AI response to DB[cite: 2]
+      await supabase.from('chat_messages').insert({ session_id: activeSession, role: 'assistant', content: aiText });
       setMessages(prev => [...prev, { role: 'assistant', content: aiText }]);
 
       // Update Credits
@@ -92,8 +87,7 @@ export default function AgenticAI() {
       setCredits(newCredits);
 
     } catch (err) {
-      console.error("Generation failed:", err);
-      setMessages(prev => [...prev, { role: 'assistant', content: "System Timeout. Check Vercel Logs." }]);
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -103,70 +97,37 @@ export default function AgenticAI() {
     <div className="flex h-screen bg-black text-white">
       {/* Sidebar */}
       <div className="w-64 bg-zinc-950 border-r border-white/5 p-4 flex flex-col">
-        <button 
-          onClick={() => setCurrentSessionId(null)} 
-          className="bg-blue-600 hover:bg-blue-700 transition-colors p-3 rounded-xl font-bold flex items-center justify-center gap-2 mb-6"
-        >
+        <button onClick={() => setCurrentSessionId(null)} className="bg-blue-600 p-3 rounded-xl font-bold flex items-center justify-center gap-2 mb-4">
           <Plus size={18}/> New Chat
         </button>
         <div className="flex-grow overflow-y-auto space-y-2">
           {sessions.map(s => (
-            <button 
-              key={s.id} 
-              onClick={() => setCurrentSessionId(s.id)} 
-              className={`w-full p-3 rounded-lg text-left text-sm truncate transition-colors ${currentSessionId === s.id ? 'bg-white/10 text-white' : 'text-zinc-500 hover:bg-white/5'}`}
-            >
+            <button key={s.id} onClick={() => setCurrentSessionId(s.id)} className={`w-full p-3 rounded-lg text-left text-xs truncate ${currentSessionId === s.id ? 'bg-white/10' : 'text-zinc-500'}`}>
               {s.title}
             </button>
           ))}
         </div>
-        <div className="p-3 bg-zinc-900 rounded-lg text-xs text-blue-400">
-          Credits remaining: {credits}
+        <div className="mt-4 p-2 bg-zinc-900 rounded text-blue-400 text-xs text-center">
+          Credits: {credits}
         </div>
       </div>
 
-      {/* Main Chat Container */}
-      <div className="flex-grow flex flex-col min-w-0">
-        <div className="flex-grow overflow-y-auto p-6 space-y-6" ref={scrollRef}>
-          {messages.length === 0 && !loading && (
-            <div className="h-full flex items-center justify-center text-zinc-600">
-              Start a conversation to see magic happen.
-            </div>
-          )}
+      {/* Chat window */}
+      <div className="flex-grow flex flex-col">
+        <div className="flex-grow overflow-y-auto p-6 space-y-4">
           {messages.map((m, i) => (
             <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`p-4 rounded-2xl max-w-[85%] break-words ${m.role === 'user' ? 'bg-blue-600' : 'bg-zinc-900 border border-white/10'}`}>
+              <div className={`p-4 rounded-2xl max-w-[80%] ${m.role === 'user' ? 'bg-blue-600' : 'bg-zinc-900 border border-white/10'}`}>
                 {m.content}
               </div>
             </div>
           ))}
-          {loading && (
-            <div className="flex justify-start">
-              <div className="p-4 rounded-2xl bg-zinc-900 border border-white/10">
-                <Loader2 className="animate-spin text-blue-500" size={20} />
-              </div>
-            </div>
-          )}
+          {loading && <Loader2 className="animate-spin text-blue-500 mx-auto" />}
         </div>
-
-        {/* Input Bar */}
         <div className="p-6">
-          <div className="max-w-4xl mx-auto flex gap-3 bg-zinc-900 border border-white/10 p-2 rounded-2xl items-center">
-            <textarea 
-              value={prompt} 
-              onChange={e => setPrompt(e.target.value)} 
-              onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleGenerate(); } }}
-              className="flex-grow bg-transparent p-3 outline-none resize-none max-h-32" 
-              placeholder="Ask anything..."
-              rows={1}
-            />
-            <button 
-              onClick={handleGenerate} 
-              disabled={loading || !prompt.trim()}
-              className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 p-4 rounded-xl transition-all"
-            >
-              <Send size={20}/>
-            </button>
+          <div className="max-w-3xl mx-auto flex gap-2 bg-zinc-900 border border-white/10 p-2 rounded-2xl">
+            <input value={prompt} onChange={e => setPrompt(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleGenerate()} className="flex-grow bg-transparent p-3 outline-none" placeholder="Type a message..." />
+            <button onClick={handleGenerate} className="bg-blue-600 p-3 rounded-xl"><Send/></button>
           </div>
         </div>
       </div>
