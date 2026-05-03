@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   };
 
   async function fetchHF(modelId, input) {
-    // We add options.wait_for_model to prevent the 503/404 'loading' errors
+    // The wait_for_model: true option is critical to avoid 503 and 404 errors during cold starts[cite: 14]
     const response = await fetch(`https://api-inference.huggingface.co/models/${modelId}`, {
       headers: { 
         Authorization: `Bearer ${keys.hf}`, 
@@ -26,9 +26,9 @@ export default async function handler(req, res) {
   }
 
   try {
-    // --- IMAGE: Stable Diffusion 2.1 (The most stable public endpoint) ---
+    // --- IMAGE GENERATION (Using SD v1.5 for maximum reliability) ---
     if (mode === 'image') {
-      const imgResp = await fetchHF("stabilityai/stable-diffusion-2-1", prompt);
+      const imgResp = await fetchHF("runwayml/stable-diffusion-v1-5", prompt);
       if (!imgResp.ok) throw new Error(`HF Image Error: ${imgResp.status}`);
       
       const buffer = await imgResp.arrayBuffer();
@@ -38,7 +38,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // --- VIDEO: ModelScope (Most reliable for free text-to-video) ---
+    // --- VIDEO GENERATION (Using ModelScope) ---
     if (mode === 'video') {
       const vidResp = await fetchHF("damo-vilab/modelscope-damo-text-to-video", prompt);
       if (!vidResp.ok) throw new Error(`HF Video Error: ${vidResp.status}`);
@@ -50,7 +50,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // --- CHAT: (Gemini 2.5 Flash - Working perfectly) ---
+    // --- CHAT: (Gemini 2.5 Flash - Left untouched) ---
     const gemUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${keys.gemini}`;
     const gemResp = await fetch(gemUrl, {
       method: 'POST',
