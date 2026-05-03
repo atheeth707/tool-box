@@ -1,9 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import Home from './pages/Home';
-import Category from './pages/Category';
-import ToolPage from './pages/ToolPage';
-import Pricing from './pages/Pricing'; // 1. Added Import
+import AgenticAI from './tools/AgenticAI'; // Import your AI component
 
 function App() {
   return (
@@ -11,15 +9,10 @@ function App() {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
-          <Route path="category/:categoryId" element={<Category />} />
-          <Route path="tool/:toolId" element={<ToolPage />} />
-          
-          {/* 2. Added the Pricing Route */}
-          <Route path="pricing" element={<Pricing />} />
+          {/* ... other routes ... */}
+          <Route path="agent" element={<AgenticAI />} /> 
         </Route>
       </Routes>
     </BrowserRouter>
   );
 }
-
-export default App;
