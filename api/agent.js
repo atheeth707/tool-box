@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-  // Only allow POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({ text: "Method Not Allowed" });
   }
@@ -12,32 +11,37 @@ export default async function handler(req, res) {
 
   try {
     const GEMINI_KEY = process.env.GEMINI_API_KEY;
-    
-    // Use native fetch to call Gemini directly (No install needed)[cite: 1]
+
+    // Use Gemini 1.5 Flash on the v1 stable endpoint
     if (mode === 'chat' || mode === 'code' || !mode) {
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
+        `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }]
+            contents: [{
+              parts: [{ text: prompt }]
+            }]
           })
         }
       );
 
       const data = await response.json();
-      
-      // Handle Google API errors[cite: 1]
+
+      // Better error handling for API responses
       if (data.error) {
-        throw new Error(data.error.message || "Gemini API Error");
+        return res.status(data.error.code || 500).json({ 
+          text: `Google API Error: ${data.error.message}` 
+        });
       }
 
-      const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "No response content.";
+      // Safeguard against empty candidates
+      const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "The AI returned an empty response.";
       return res.status(200).json({ text: aiText });
     }
 
-    // Call Groq using native fetch[cite: 2]
+    // Call Groq for other modes
     if (mode === 'image' || mode === 'video') {
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
@@ -56,8 +60,7 @@ export default async function handler(req, res) {
     }
 
   } catch (err) {
-    console.error("Backend Error:", err);
-    // Return JSON to prevent frontend SyntaxError[cite: 1]
+    console.error("Critical Backend Error:", err);
     return res.status(500).json({ text: "System Error: " + err.message });
   }
 }
