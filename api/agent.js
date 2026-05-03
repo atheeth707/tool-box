@@ -12,10 +12,10 @@ export default async function handler(req, res) {
   let geminiError = "Key not configured";
   let groqError = "Key not configured";
 
-  // Attempt 1: Gemini 1.5 Flash
+  // Attempt 1: Gemini 1.5 Flash (Updated to '-latest')
   if (GEMINI_KEY) {
     try {
-      const gResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
+      const gResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_KEY}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
@@ -25,7 +25,6 @@ export default async function handler(req, res) {
       if (gResp.ok && gData.candidates?.[0]?.content?.parts?.[0]?.text) {
         return res.status(200).json({ text: gData.candidates[0].content.parts[0].text });
       } else {
-        // Capture the exact API error
         geminiError = gData.error?.message || "Invalid JSON structure";
       }
     } catch (e) {
@@ -33,7 +32,7 @@ export default async function handler(req, res) {
     }
   }
 
-  // Attempt 2: Groq (Backup)
+  // Attempt 2: Groq Backup (Updated to current Llama 3.1 model)
   if (GROQ_KEY) {
     try {
       const qResp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -43,7 +42,7 @@ export default async function handler(req, res) {
           'Content-Type': 'application/json' 
         },
         body: JSON.stringify({ 
-          model: "llama3-70b-8192", 
+          model: "llama-3.1-70b-versatile", // <-- Fixed Model Name
           messages: [{ role: "user", content: prompt }] 
         })
       });
@@ -52,7 +51,6 @@ export default async function handler(req, res) {
       if (qResp.ok && qData.choices?.[0]?.message?.content) {
         return res.status(200).json({ text: qData.choices[0].message.content });
       } else {
-         // Capture the exact API error
         groqError = qData.error?.message || "Invalid JSON structure";
       }
     } catch (e) {
@@ -60,7 +58,6 @@ export default async function handler(req, res) {
     }
   }
 
-  // If both fail, return the EXACT errors to the frontend chat UI
   return res.status(500).json({ 
     text: `AI Offline.\n\nGemini Error: ${geminiError}\n\nGroq Error: ${groqError}` 
   });
