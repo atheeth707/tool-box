@@ -5,7 +5,7 @@ import Category from './pages/Category';
 import ToolPage from './pages/ToolPage';
 import AuthPage from './pages/AuthPage';
 import Pricing from './pages/Pricing';
-import AgenticAI from './pages/AgenticAI';
+import AgenticAI from './tools/AgenticAI';
 
 export default function App() {
   return (
