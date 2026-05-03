@@ -18,8 +18,8 @@ export default function AgenticAI() {
 
   const handleSend = async () => {
     if (!prompt.trim() || loading) return;
-    const input = prompt;
-    setMessages(prev => [...prev, { role: 'user', content: input, type: 'text' }]);
+    const currentInput = prompt;
+    setMessages(prev => [...prev, { role: 'user', content: currentInput, type: 'text' }]);
     setLoading(true);
     setPrompt('');
 
@@ -27,7 +27,7 @@ export default function AgenticAI() {
       const res = await fetch('/api/agent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: input, mode }),
+        body: JSON.stringify({ prompt: currentInput, mode }),
       });
       
       const data = await res.json();
@@ -48,7 +48,6 @@ export default function AgenticAI() {
   return (
     <div className="flex h-screen bg-[#050505] text-zinc-100 font-sans">
       <div className="flex-grow flex flex-col items-center">
-        {/* Header */}
         <div className="w-full max-w-5xl p-5 flex justify-between items-center border-b border-white/5 bg-black/40 backdrop-blur-2xl">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 bg-blue-600 rounded flex items-center justify-center font-bold text-[10px]">AI</div>
@@ -59,7 +58,6 @@ export default function AgenticAI() {
           </button>
         </div>
 
-        {/* Messages */}
         <div className="w-full max-w-3xl flex-grow overflow-y-auto px-6 py-10 space-y-12" ref={scrollRef}>
           {messages.map((m, i) => (
             <div key={i} className="flex gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -80,7 +78,6 @@ export default function AgenticAI() {
           {loading && <div className="flex items-center gap-2 text-zinc-600 text-xs animate-pulse pl-16"><Loader2 size={14} className="animate-spin"/> Generating {mode}...</div>}
         </div>
 
-        {/* Input */}
         <div className="w-full max-w-3xl p-6 pb-12">
           <div className="bg-[#0f0f0f] border border-white/10 rounded-[28px] p-2 shadow-2xl">
             <div className="flex gap-1 mb-2 px-1">

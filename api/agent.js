@@ -9,51 +9,55 @@ export default async function handler(req, res) {
     hf: process.env.HF_TOKEN,
   };
 
-  async function fetchHF(modelId, input) {
-    const response = await fetch(`https://api-inference.huggingface.co/models/${modelId}`, {
-      headers: { Authorization: `Bearer ${keys.hf}`, "Content-Type": "application/json" },
-      method: "POST",
-      body: JSON.stringify({ inputs: input }),
-    });
-
-    // If model is loading, wait and retry once
-    if (response.status === 503) {
-      await new Promise(r => setTimeout(r, 10000)); 
-      return fetch(`https://api-inference.huggingface.co/models/${modelId}`, {
-        headers: { Authorization: `Bearer ${keys.hf}`, "Content-Type": "application/json" },
-        method: "POST",
-        body: JSON.stringify({ inputs: input }),
-      });
+  async function fetchWithRetry(url, options, retries = 3) {
+    for (let i = 0; i < retries; i++) {
+      try {
+        const response = await fetch(url, options);
+        // 503 means model is loading, 429 means too many requests
+        if (response.status !== 503 && response.status !== 429) return response;
+        
+        // Wait longer for video models (10s) vs others (5s)
+        const waitTime = url.includes("video") ? 10000 : 5000;
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+      } catch (e) {
+        if (i === retries - 1) throw e;
+      }
     }
-    return response;
+    return fetch(url, options);
   }
 
   try {
-    // --- IMAGE GENERATION (Reliable Model: SD v1.5) ---
+    // --- IMAGE: Stable Diffusion 2.1 (Very stable, no 404) ---
     if (mode === 'image') {
-      const imgResp = await fetchHF("runwayml/stable-diffusion-v1-5", prompt);
+      const imgResp = await fetchWithRetry(
+        "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1",
+        {
+          headers: { Authorization: `Bearer ${keys.hf}`, "Content-Type": "application/json" },
+          method: "POST",
+          body: JSON.stringify({ inputs: prompt }),
+        }
+      );
       if (!imgResp.ok) throw new Error(`HF Image Error: ${imgResp.status}`);
-      
       const buffer = await imgResp.arrayBuffer();
-      return res.status(200).json({ 
-        data: `data:image/png;base64,${Buffer.from(buffer).toString('base64')}`, 
-        type: 'image' 
-      });
+      return res.status(200).json({ data: `data:image/png;base64,${Buffer.from(buffer).toString('base64')}`, type: 'image' });
     }
 
-    // --- VIDEO GENERATION (Reliable Model: ModelScope) ---
+    // --- VIDEO: ModelScope (Most reliable free inference endpoint) ---
     if (mode === 'video') {
-      const vidResp = await fetchHF("damo-vilab/modelscope-damo-text-to-video", prompt);
+      const vidResp = await fetchWithRetry(
+        "https://api-inference.huggingface.co/models/damo-vilab/modelscope-damo-text-to-video",
+        {
+          headers: { Authorization: `Bearer ${keys.hf}`, "Content-Type": "application/json" },
+          method: "POST",
+          body: JSON.stringify({ inputs: prompt }),
+        }
+      );
       if (!vidResp.ok) throw new Error(`HF Video Error: ${vidResp.status}`);
-      
       const buffer = await vidResp.arrayBuffer();
-      return res.status(200).json({ 
-        data: `data:video/mp4;base64,${Buffer.from(buffer).toString('base64')}`, 
-        type: 'video' 
-      });
+      return res.status(200).json({ data: `data:video/mp4;base64,${Buffer.from(buffer).toString('base64')}`, type: 'video' });
     }
 
-    // --- CHAT (Untouched - Gemini 2.5 Flash) ---
+    // --- CHAT: (UNTOUCHED) ---
     const gemUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${keys.gemini}`;
     const gemResp = await fetch(gemUrl, {
       method: 'POST',
