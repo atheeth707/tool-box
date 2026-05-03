@@ -12,10 +12,10 @@ export default async function handler(req, res) {
   let geminiError = "Key not configured";
   let groqError = "Key not configured";
 
-  // Attempt 1: Gemini 1.5 Flash (Updated to '-latest')
+  // Attempt 1: Gemini 1.5 Flash (Switched to v1 stable endpoint)
   if (GEMINI_KEY) {
     try {
-      const gResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_KEY}`, {
+      const gResp = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
@@ -25,14 +25,14 @@ export default async function handler(req, res) {
       if (gResp.ok && gData.candidates?.[0]?.content?.parts?.[0]?.text) {
         return res.status(200).json({ text: gData.candidates[0].content.parts[0].text });
       } else {
-        geminiError = gData.error?.message || "Invalid JSON structure";
+        geminiError = gData.error?.message || "Invalid response structure";
       }
     } catch (e) {
       geminiError = "Fetch failed - " + e.message;
     }
   }
 
-  // Attempt 2: Groq Backup (Updated to current Llama 3.1 model)
+  // Attempt 2: Groq Backup (Switched to Llama 3.1 8b Instant)
   if (GROQ_KEY) {
     try {
       const qResp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -42,7 +42,7 @@ export default async function handler(req, res) {
           'Content-Type': 'application/json' 
         },
         body: JSON.stringify({ 
-          model: "llama-3.1-70b-versatile", // <-- Fixed Model Name
+          model: "llama-3.1-8b-instant", 
           messages: [{ role: "user", content: prompt }] 
         })
       });
@@ -51,7 +51,7 @@ export default async function handler(req, res) {
       if (qResp.ok && qData.choices?.[0]?.message?.content) {
         return res.status(200).json({ text: qData.choices[0].message.content });
       } else {
-        groqError = qData.error?.message || "Invalid JSON structure";
+        groqError = qData.error?.message || "Invalid response structure";
       }
     } catch (e) {
       groqError = "Fetch failed - " + e.message;
