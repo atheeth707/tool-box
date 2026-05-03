@@ -1,39 +1,62 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Loader2, MessageSquare, ImageIcon, Video, Code, Zap, Trash2, Bot, User } from 'lucide-react';
+import { Send, Loader2, MessageSquare, ImageIcon, Video, Code, Plus, User, Bot, Trash2 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 
 export default function AgenticAI() {
   const [prompt, setPrompt] = useState('');
-  const [messages, setMessages] = useState<any[]>([]); 
+  const [messages, setMessages] = useState<any[]>([]);
+  const [sessionId, setSessionId] = useState<string | null>(localStorage.getItem('active_session'));
   const [mode, setMode] = useState<'chat' | 'image' | 'video' | 'code'>('chat');
   const [loading, setLoading] = useState(false);
-  const [credits, setCredits] = useState(0);
   const [user, setUser] = useState<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Initialize User and Load Persistent History
   useEffect(() => {
-    const checkUser = async () => {
+    const init = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         setUser(session.user);
-        const { data } = await supabase.from('profiles').select('credits').eq('id', session.user.id).single();
-        if (data) setCredits(data.credits);
+        if (sessionId) {
+          const { data } = await supabase.from('chat_messages')
+            .select('*').eq('session_id', sessionId).order('created_at', { ascending: true });
+          if (data) setMessages(data);
+        }
       }
     };
-    checkUser();
-  }, []);
+    init();
+  }, [sessionId]);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, loading]);
 
-  const handleAction = async () => {
-    if (!prompt.trim() || credits < 1 || loading) return;
-    
+  const startNewSession = () => {
+    const newId = crypto.randomUUID();
+    setSessionId(newId);
+    localStorage.setItem('active_session', newId);
+    setMessages([]);
+  };
+
+  const handleSend = async () => {
+    if (!prompt.trim() || !user || loading) return;
+
+    let activeId = sessionId;
+    if (!activeId) {
+      activeId = crypto.randomUUID();
+      setSessionId(activeId);
+      localStorage.setItem('active_session', activeId);
+    }
+
     const userText = prompt;
-    setMessages(prev => [...prev, { role: 'user', content: userText }]);
-    setLoading(true);
     setPrompt('');
+    setLoading(true);
+
+    // Persist User Message
+    const { data: userEntry } = await supabase.from('chat_messages').insert({
+      session_id: activeId, role: 'user', content: userText, type: 'text'
+    }).select().single();
+    if (userEntry) setMessages(prev => [...prev, userEntry]);
 
     try {
       const res = await fetch('/api/agent', {
@@ -41,92 +64,108 @@ export default function AgenticAI() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: userText, mode }),
       });
-      
       const data = await res.json();
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: data.data || data.text, 
-        type: data.type || 'text',
-        engine: data.engine 
-      }]);
 
-      const { data: updated } = await supabase.from('profiles')
-        .update({ credits: credits - 1 }).eq('id', user.id).select('credits').single();
-      if (updated) setCredits(updated.credits);
+      // Persist AI Message
+      const { data: aiEntry } = await supabase.from('chat_messages').insert({
+        session_id: activeId,
+        role: 'assistant',
+        content: data.data || data.text,
+        type: data.type || 'text',
+        engine: data.engine
+      }).select().single();
+      if (aiEntry) setMessages(prev => [...prev, aiEntry]);
 
     } catch (err) {
-      setMessages(prev => [...prev, { role: 'assistant', content: "Cluster connection failed." }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: "Connection failed.", type: 'text' }]);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex h-screen bg-[#050505] text-zinc-100 font-sans">
-      <div className="flex-grow flex flex-col max-w-4xl mx-auto w-full border-x border-white/5">
-        
-        {/* Navbar */}
-        <div className="p-4 border-b border-white/5 flex justify-between items-center bg-black/40 backdrop-blur-xl">
-          <div className="flex items-center gap-2">
-            <Zap size={18} className="text-blue-500 fill-blue-500" />
-            <span className="font-black uppercase tracking-tighter text-lg">Arena AI</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="text-[10px] font-bold px-3 py-1 bg-white/5 rounded-full border border-white/10 uppercase">
-              {credits} Credits left
-            </div>
-            <button onClick={() => setMessages([])} className="text-zinc-500 hover:text-red-400 transition-colors">
-              <Trash2 size={18} />
-            </button>
+    <div className="flex h-screen bg-[#0d0d0d] text-zinc-200 font-sans">
+      {/* Sleek Sidebar */}
+      <div className="w-64 bg-black border-r border-white/5 p-4 flex flex-col hidden md:flex">
+        <button onClick={startNewSession} className="flex items-center gap-2 p-3 border border-white/10 rounded-xl hover:bg-white/5 transition-all text-sm font-medium mb-4">
+          <Plus size={16} /> New Chat
+        </button>
+        <div className="flex-grow overflow-y-auto text-xs text-zinc-500 space-y-2">
+          <p className="uppercase tracking-widest font-bold px-2">Current Session</p>
+          <div className="p-2 bg-white/5 rounded-lg text-zinc-300 truncate">
+            {messages[0]?.content || "Empty Chat"}
           </div>
         </div>
+      </div>
 
-        {/* Chat Area */}
-        <div className="flex-grow overflow-y-auto p-6 space-y-8" ref={scrollRef}>
+      {/* Main Content */}
+      <div className="flex-grow flex flex-col items-center relative overflow-hidden">
+        {/* Header */}
+        <div className="w-full max-w-4xl p-4 flex justify-between items-center z-10">
+          <span className="font-black tracking-tighter text-xl text-white">ARENA <span className="text-blue-500">AI</span></span>
+          <button onClick={() => { localStorage.removeItem('active_session'); setMessages([]); setSessionId(null); }} className="p-2 hover:bg-white/5 rounded-full text-zinc-500 hover:text-red-400">
+            <Trash2 size={18} />
+          </button>
+        </div>
+
+        {/* Chat Stream */}
+        <div className="w-full max-w-3xl flex-grow overflow-y-auto p-4 space-y-8 scroll-smooth" ref={scrollRef}>
           {messages.length === 0 && (
-            <div className="h-full flex flex-col items-center justify-center opacity-20">
-              <MessageSquare size={64} />
-              <p className="mt-4 font-bold uppercase tracking-widest text-xs">No History Found</p>
+            <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-30">
+              <div className="p-4 bg-zinc-900 rounded-3xl"><Bot size={48} /></div>
+              <h2 className="text-2xl font-bold tracking-tight">How can I help you today?</h2>
             </div>
           )}
           {messages.map((m, i) => (
-            <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`flex gap-4 max-w-[85%] ${m.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${m.role === 'user' ? 'bg-blue-600 border-blue-400' : 'bg-zinc-900 border-white/10'}`}>
-                  {m.role === 'user' ? <User size={18}/> : <Bot size={18}/>}
-                </div>
-                <div className={`p-4 rounded-2xl relative ${m.role === 'user' ? 'bg-blue-600' : 'bg-zinc-900 border border-white/5 shadow-2xl'}`}>
-                  {m.type === 'image' ? <img src={m.content} className="rounded-lg shadow-xl" alt="AI Gen" /> : <div className="text-sm whitespace-pre-wrap leading-relaxed">{m.content}</div>}
-                  {m.engine && <div className="absolute -bottom-5 left-1 text-[8px] text-zinc-600 font-mono uppercase tracking-widest">{m.engine}</div>}
-                </div>
+            <div key={i} className="flex gap-5 group">
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 border border-white/5 ${m.role === 'user' ? 'bg-zinc-800' : 'bg-blue-600/20 text-blue-400 border-blue-500/20'}`}>
+                {m.role === 'user' ? <User size={18} /> : <Bot size={18} />}
+              </div>
+              <div className="flex-grow space-y-2 pt-1">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">
+                  {m.role === 'user' ? 'You' : m.engine || 'Arena AI'}
+                </p>
+                {m.type === 'image' ? (
+                  <img src={m.content} className="rounded-2xl border border-white/10 max-w-sm shadow-2xl" alt="AI Generated" />
+                ) : (
+                  <div className="text-[15px] leading-relaxed whitespace-pre-wrap">{m.content}</div>
+                )}
               </div>
             </div>
           ))}
-          {loading && <div className="flex justify-start animate-pulse"><div className="w-9 h-9 bg-zinc-800 rounded-xl" /></div>}
+          {loading && <div className="flex gap-5 animate-pulse"><div className="w-9 h-9 bg-zinc-900 rounded-full" /><div className="h-4 w-24 bg-zinc-900 rounded mt-2" /></div>}
         </div>
 
-        {/* Controls */}
-        <div className="p-6 bg-gradient-to-t from-black to-transparent">
-          <div className="max-w-2xl mx-auto space-y-4">
-            <div className="flex justify-center gap-2 p-1 bg-white/5 rounded-2xl border border-white/5 backdrop-blur-md">
+        {/* Input Dock */}
+        <div className="w-full max-w-3xl p-4 mb-4">
+          <div className="bg-[#1a1a1a] border border-white/10 rounded-[28px] p-2 shadow-2xl">
+            <div className="flex gap-2 mb-2 px-2">
               {[
                 { id: 'chat', icon: <MessageSquare size={14}/>, label: 'Chat' },
                 { id: 'code', icon: <Code size={14}/>, label: 'Code' },
                 { id: 'image', icon: <ImageIcon size={14}/>, label: 'Image' },
                 { id: 'video', icon: <Video size={14}/>, label: 'Video' }
               ].map(t => (
-                <button key={t.id} onClick={() => setMode(t.id as any)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-bold uppercase transition-all ${mode === t.id ? 'bg-blue-600 text-white shadow-lg' : 'text-zinc-500 hover:bg-white/5'}`}>
+                <button key={t.id} onClick={() => setMode(t.id as any)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all ${mode === t.id ? 'bg-white/10 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}>
                   {t.icon} {t.label}
                 </button>
               ))}
             </div>
-            <div className="flex gap-2 bg-zinc-900/80 border border-white/10 p-2 rounded-2xl shadow-2xl items-center focus-within:border-blue-500/50 transition-all">
-              <input value={prompt} onChange={e => setPrompt(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAction()} placeholder={`Prompt for ${mode}...`} className="flex-grow bg-transparent p-3 outline-none text-sm" />
-              <button onClick={handleAction} disabled={loading || !prompt.trim()} className="bg-blue-600 p-4 rounded-xl hover:bg-blue-500 disabled:opacity-20 transition-all">
-                {loading ? <Loader2 className="animate-spin" size={18} /> : <Send size={18} />}
+            <div className="flex items-end gap-2 px-2 pb-1">
+              <textarea 
+                rows={1}
+                value={prompt} 
+                onChange={e => setPrompt(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())}
+                placeholder={`Ask anything...`} 
+                className="flex-grow bg-transparent p-2 outline-none text-base resize-none max-h-40" 
+              />
+              <button onClick={handleSend} disabled={loading || !prompt.trim()} className="bg-white text-black p-2.5 rounded-full hover:bg-zinc-200 transition-all disabled:opacity-10">
+                <Send size={20} />
               </button>
             </div>
           </div>
+          <p className="text-center text-[10px] text-zinc-600 mt-3">Arena AI can provide incorrect information. Verify important data.</p>
         </div>
       </div>
     </div>

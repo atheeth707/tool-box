@@ -5,75 +5,75 @@ export default async function handler(req, res) {
   const keys = {
     gemini: process.env.GEMINI_API_KEY,
     groq: process.env.GROQ_API_KEY,
-    hf: process.env.HF_TOKEN, // Hugging Face Token
+    hf: process.env.HF_TOKEN,
   };
 
-  // --- ENGINE: Hugging Face (Images) ---
+  // --- ENGINE: Hugging Face (Optimized for Images) ---
   async function callHuggingFaceImage(p) {
-    if (!keys.hf) throw new Error("HF_TOKEN missing.");
+    if (!keys.hf) throw new Error("HF_TOKEN missing in environment.");
+    
     const response = await fetch(
       "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell",
       {
-        headers: { Authorization: `Bearer ${keys.hf}`, "Content-Type": "application/json" },
+        headers: { 
+          Authorization: `Bearer ${keys.hf}`, 
+          "Content-Type": "application/json",
+          "x-use-cache": "false" 
+        },
         method: "POST",
         body: JSON.stringify({ inputs: p }),
       }
     );
-    if (!response.ok) throw new Error("Hugging Face Image Gen Failed");
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error || "Hugging Face model is currently loading or busy.");
+    }
+
     const buffer = await response.arrayBuffer();
     const base64 = Buffer.from(buffer).toString('base64');
-    return { data: `data:image/webp;base64,${base64}`, type: 'image', engine: "HF (FLUX.1)" };
+    return { data: `data:image/webp;base64,${base64}`, type: 'image', engine: "FLUX.1 (HF)" };
   }
 
-  // --- ENGINE: Groq (Chat/Code Primary) ---
+  // --- ENGINE: Groq (Llama 3.1) ---
   async function callGroq(p) {
     const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${keys.groq}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ model: "llama-3.1-8b-instant", messages: [{ role: "user", content: p }] })
     });
+    if (!resp.ok) throw new Error("Groq API error.");
     const data = await resp.json();
-    if (!resp.ok) throw new Error("Groq failed");
-    return { text: data.choices[0].message.content, engine: "Groq (Llama 3.1)" };
+    return { text: data.choices[0].message.content, engine: "Llama 3.1" };
   }
 
-  // --- ENGINE: Gemini (Fallback & Video Logic) ---
+  // --- ENGINE: Gemini (Fix for Video/Fallback) ---
   async function callGemini(p) {
     const resp = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${keys.gemini}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contents: [{ parts: [{ text: p }] }] })
     });
+    if (!resp.ok) throw new Error("Gemini API error.");
     const data = await resp.json();
-    if (!resp.ok) throw new Error("Gemini failed");
     return { text: data.candidates[0].content.parts[0].text, engine: "Gemini 1.5 Flash" };
   }
 
   try {
-    // 1. IMAGE MODE
-    if (mode === 'image') {
-      return res.status(200).json(await callHuggingFaceImage(prompt));
-    }
+    if (mode === 'image') return res.status(200).json(await callHuggingFaceImage(prompt));
 
-    // 2. VIDEO MODE (Descriptive Scripting via Gemini)
-    if (mode === 'video') {
-      const videoPrompt = `Act as a cinematic director. Provide a highly detailed, frame-by-frame visual description for a 5-second video based on: ${prompt}. Use vivid lighting and motion cues.`;
-      return res.status(200).json(await callGemini(videoPrompt));
-    }
+    const systemPrompt = mode === 'video' 
+      ? `Provide a cinematic, technical visual description for a video based on: ${prompt}` 
+      : mode === 'code' ? `Write professional code for: ${prompt}` : prompt;
 
-    // 3. CHAT/CODE MODE (Groq First -> Gemini Fallback)
-    const finalPrompt = mode === 'code' ? `Write expert, clean code for: ${prompt}` : prompt;
-    
-    if (keys.groq) {
-      try {
-        const result = await callGroq(finalPrompt);
-        return res.status(200).json(result);
-      } catch (e) {
-        console.error("Groq down, failing over to Gemini...");
-      }
+    // Groq First -> Gemini Fallback
+    try {
+      if (keys.groq) return res.status(200).json(await callGroq(systemPrompt));
+    } catch (e) {
+      console.warn("Groq failed, falling back to Gemini.");
     }
     
-    return res.status(200).json(await callGemini(finalPrompt));
+    return res.status(200).json(await callGemini(systemPrompt));
 
   } catch (err) {
     return res.status(500).json({ text: `System Error: ${err.message}`, type: 'text' });
