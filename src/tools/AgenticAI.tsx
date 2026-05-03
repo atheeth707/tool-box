@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Sparkles, BrainCircuit, Loader2, AlertCircle, 
-  Coins, Image as ImageIcon, Video, Code, MessageSquare, 
-  Paperclip, X, Send, FileText, UserPlus, Cpu, User, Bot, Zap
+  Image as ImageIcon, Video, Code, MessageSquare, 
+  X, Send, UserPlus, Cpu, User, Bot, Zap, Settings2, ChevronDown
 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 
@@ -16,6 +16,28 @@ interface Message {
   timestamp: Date;
 }
 
+// Available Model Library
+const MODEL_LIBRARY = {
+  chat: [
+    { id: 'gemini-2-pro', name: "Gemini 2.0 Pro", provider: "Google AI" },
+    { id: 'llama-3-70b', name: "Llama 3 (70B)", provider: "Groq Cloud" },
+    { id: 'gemini-1-5-flash', name: "Gemini 1.5 Flash", provider: "Google AI" }
+  ],
+  image: [
+    { id: 'sdxl', name: "Stable Diffusion XL", provider: "Hugging Face" },
+    { id: 'flux-1', name: "Flux.1 [Dev]", provider: "Hugging Face" },
+    { id: 'dalle-3', name: "DALL-E 3", provider: "OpenAI" }
+  ],
+  video: [
+    { id: 'veo-svd', name: "Veo / SVD", provider: "Hugging Face" },
+    { id: 'kling', name: "Kling AI", provider: "External" }
+  ],
+  code: [
+    { id: 'llama-3-code', name: "Llama 3 Code", provider: "Groq Cloud" },
+    { id: 'gemini-3-flash', name: "Gemini 3 Flash", provider: "Google AI" }
+  ]
+};
+
 export default function AgenticAI() {
   const [prompt, setPrompt] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -25,16 +47,17 @@ export default function AgenticAI() {
   const [session, setSession] = useState<any>(null);
   const [credits, setCredits] = useState<number | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [showEnginePanel, setShowEnginePanel] = useState(false);
+
+  // USER SELECTED ENGINES STATE
+  const [selectedEngines, setSelectedEngines] = useState({
+    chat: MODEL_LIBRARY.chat[0],
+    image: MODEL_LIBRARY.image[0],
+    video: MODEL_LIBRARY.video[0],
+    code: MODEL_LIBRARY.code[0]
+  });
   
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  // Map modes to your 3 API providers
-  const engineMap = {
-    chat: { name: "Gemini 2.0 Pro", provider: "Google AI" },
-    image: { name: "Stable Diffusion XL", provider: "Hugging Face" },
-    video: { name: "Veo / SVD", provider: "Hugging Face" },
-    code: { name: "Llama 3 (70B)", provider: "Groq Cloud" }
-  };
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -69,9 +92,10 @@ export default function AgenticAI() {
       const formData = new FormData();
       formData.append('prompt', currentPrompt);
       formData.append('mode', mode);
+      formData.append('model_id', selectedEngines[mode].id); // Send the user-selected model ID
 
       const res = await fetch('/api/agent', { method: 'POST', body: formData });
-      if (!res.ok) throw new Error("Agent overloaded. Please try again.");
+      if (!res.ok) throw new Error("Engine timeout. Try a different model.");
 
       const data = await res.json();
       const aiMsg: Message = { 
@@ -95,45 +119,79 @@ export default function AgenticAI() {
   if (authLoading) return <div className="min-h-screen flex items-center justify-center bg-[#050505]"><Loader2 className="animate-spin text-blue-500 w-12 h-12" /></div>;
 
   return (
-    <div className="flex flex-col h-[85vh] max-w-5xl mx-auto bg-white dark:bg-[#050505] rounded-[2.5rem] border border-gray-100 dark:border-white/5 shadow-2xl overflow-hidden animate-in fade-in duration-500">
+    <div className="flex flex-col h-[85vh] max-w-5xl mx-auto bg-white dark:bg-[#050505] rounded-[2.5rem] border border-gray-100 dark:border-white/5 shadow-2xl overflow-hidden relative">
       
-      {/* HEADER: Dynamic Engine Label */}
-      <div className="p-5 border-b border-gray-100 dark:border-white/5 flex items-center justify-between bg-white/50 dark:bg-black/40 backdrop-blur-xl">
+      {/* 1. HEADER: Dynamic Engine Selection */}
+      <div className="p-5 border-b border-gray-100 dark:border-white/5 flex items-center justify-between bg-white/50 dark:bg-black/40 backdrop-blur-xl z-20">
         <div className="flex items-center gap-4">
           <div className="p-2.5 bg-blue-600 rounded-2xl shadow-lg shadow-blue-500/20">
              <Cpu className="text-white w-5 h-5" />
           </div>
-          <div>
+          <div className="relative">
             <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-0.5">Active Engine</h2>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-black dark:text-white uppercase tracking-tight">
-                {engineMap[mode].name} 
+            <button 
+              onClick={() => setShowEnginePanel(!showEnginePanel)}
+              className="flex items-center gap-2 group"
+            >
+              <span className="text-sm font-black dark:text-white uppercase tracking-tight group-hover:text-blue-500 transition-colors">
+                {selectedEngines[mode].name} 
               </span>
-              <span className="text-[9px] bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded-md font-bold border border-blue-500/20">
-                {engineMap[mode].provider}
-              </span>
-            </div>
+              <ChevronDown size={14} className={`text-gray-500 transition-transform ${showEnginePanel ? 'rotate-180' : ''}`} />
+            </button>
           </div>
         </div>
         
-        <div className="flex items-center gap-3 bg-yellow-500/10 px-4 py-2 rounded-2xl border border-yellow-500/20">
-          <Zap size={14} className="text-yellow-500 fill-yellow-500" />
-          <span className="text-xs font-black text-yellow-700 dark:text-yellow-500 uppercase tracking-tighter">
-            {credits} Credits
-          </span>
+        <div className="flex items-center gap-3">
+          <div className="hidden md:flex bg-blue-500/10 px-3 py-1.5 rounded-xl border border-blue-500/20 text-[10px] font-black text-blue-500 uppercase">
+            {selectedEngines[mode].provider}
+          </div>
+          <div className="flex items-center gap-3 bg-yellow-500/10 px-4 py-2 rounded-2xl border border-yellow-500/20">
+            <Zap size={14} className="text-yellow-500 fill-yellow-500" />
+            <span className="text-xs font-black text-yellow-700 dark:text-yellow-500 uppercase tracking-tighter">
+              {credits}
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* CHAT AREA */}
-      <div ref={scrollRef} className="flex-grow overflow-y-auto p-6 md:p-10 space-y-8 custom-scrollbar">
+      {/* 2. ENGINE SELECTION OVERLAY */}
+      {showEnginePanel && (
+        <div className="absolute top-[80px] left-5 right-5 bg-white dark:bg-[#0f0f0f] border border-gray-100 dark:border-white/10 rounded-3xl shadow-2xl z-50 p-6 animate-in slide-in-from-top-4 duration-300">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xs font-black uppercase tracking-widest flex items-center gap-2 dark:text-white">
+              <Settings2 size={14} /> Change {mode} Engine
+            </h3>
+            <button onClick={() => setShowEnginePanel(false)}><X size={18} className="text-gray-500" /></button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {MODEL_LIBRARY[mode].map((model) => (
+              <button
+                key={model.id}
+                onClick={() => {
+                  setSelectedEngines({...selectedEngines, [mode]: model});
+                  setShowEnginePanel(false);
+                }}
+                className={`p-4 rounded-2xl border text-left transition-all ${
+                  selectedEngines[mode].id === model.id 
+                  ? 'border-blue-500 bg-blue-500/5' 
+                  : 'border-gray-100 dark:border-white/5 hover:border-blue-500/50'
+                }`}
+              >
+                <div className="text-sm font-black dark:text-white mb-1">{model.name}</div>
+                <div className="text-[10px] text-gray-500 font-bold uppercase">{model.provider}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 3. CHAT THREAD */}
+      <div ref={scrollRef} className="flex-grow overflow-y-auto p-6 md:p-10 space-y-8 custom-scrollbar bg-transparent">
         {messages.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center text-center opacity-30">
-            <div className="relative mb-6">
-              <div className="absolute -inset-4 bg-blue-500 rounded-full blur-2xl opacity-20 animate-pulse" />
-              <Sparkles className="w-16 h-16 text-blue-500 relative" />
-            </div>
-            <h3 className="text-2xl font-black dark:text-white uppercase tracking-tighter">Ready to Build?</h3>
-            <p className="text-sm text-gray-500 mt-2 max-w-xs mx-auto">Select a mode and describe your request to the {engineMap[mode].name} engine.</p>
+            <Sparkles className="w-16 h-16 text-blue-500 mb-6" />
+            <h3 className="text-2xl font-black dark:text-white uppercase tracking-tighter">Engine Ready</h3>
+            <p className="text-sm text-gray-500 mt-2 max-w-xs mx-auto">Currently using {selectedEngines[mode].name}. Use the header to swap engines.</p>
           </div>
         )}
 
@@ -161,7 +219,7 @@ export default function AgenticAI() {
         ))}
       </div>
 
-      {/* INPUT AREA */}
+      {/* 4. INPUT AREA */}
       <div className="p-6 border-t border-gray-100 dark:border-white/5 bg-white/50 dark:bg-black/30 backdrop-blur-xl">
         <div className="flex flex-wrap gap-2 mb-6 justify-center">
           {(['chat', 'image', 'video', 'code'] as AIMode[]).map((t) => (
@@ -184,7 +242,7 @@ export default function AgenticAI() {
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleGenerate())}
-            placeholder={`Ask ${engineMap[mode].name}...`}
+            placeholder={`Ask ${selectedEngines[mode].name}...`}
             className="flex-grow bg-transparent outline-none dark:text-white text-sm py-3 px-4 resize-none max-h-32"
             rows={1}
           />
