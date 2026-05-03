@@ -1,12 +1,15 @@
 import { createClient } from '@supabase/supabase-js';
 
-// These come from your Vercel Environment Variables
+// Ensure these variables are set in your Vercel Project Settings
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error("Supabase credentials missing! Check your .env file.");
+}
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Custom Type for our Profile
 export interface Profile {
   id: string;
   email: string;
