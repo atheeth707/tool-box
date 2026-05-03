@@ -1,83 +1,112 @@
+// --- Mandatory imports for TTS handling ---
+const { Buffer } = require('buffer');
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ text: "Method Not Allowed" });
 
-  const { prompt, mode = 'chat' } = req.body;
+  const { prompt, mode = 'chat', textToSpeak } = req.body;
   const keys = {
     gemini: process.env.GEMINI_API_KEY,
     groq: process.env.GROQ_API_KEY,
     hf: process.env.HF_TOKEN,
   };
 
-  // --- IMAGE ENGINE: Hugging Face (FLUX.1-schnell) ---
-  async function callHuggingFaceImage(p) {
-    if (!keys.hf) throw new Error("HF_TOKEN missing.");
-    const response = await fetch(
-      "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell",
-      {
-        headers: { 
-          Authorization: `Bearer ${keys.hf}`, 
-          "Content-Type": "application/json",
-          "x-use-cache": "false" 
-        },
-        method: "POST",
-        body: JSON.stringify({ inputs: p }),
-      }
-    );
-
-    if (response.status === 503) throw new Error("Model is loading. Please try again in 30 seconds.");
-    if (!response.ok) throw new Error("Image generation failed. check HF Token.");
-
-    const buffer = await response.arrayBuffer();
-    const base64 = Buffer.from(buffer).toString('base64');
-    return { data: `data:image/webp;base64,${base64}`, type: 'image', engine: "FLUX.1 (HF)" };
+  if (!keys.hf || !keys.groq || !keys.gemini) {
+    return res.status(500).json({ text: "Error: API Keys are missing in Vercel settings." });
   }
 
-  // --- CHAT ENGINE: Groq (Llama 3.1 8B - Lowest Cost) ---
-  async function callGroq(p) {
+  // --- ENGINE 1: Hugging Face TTS (SpeechT5) ---
+  if (textToSpeak) {
+    try {
+      const ttsResp = await fetch(
+        "https://api-inference.huggingface.co/models/microsoft/speecht5_tts",
+        {
+          headers: { Authorization: `Bearer ${keys.hf}`, "Content-Type": "application/json" },
+          method: "POST",
+          body: JSON.stringify({ inputs: textToSpeak }),
+        }
+      );
+      if (!ttsResp.ok) throw new Error("TTS API failed.");
+      const buffer = await ttsResp.arrayBuffer();
+      const base64 = Buffer.from(buffer).toString('base64');
+      // Return TTS data immediately
+      return res.status(200).json({ data: `data:audio/mpeg;base64,${base64}`, type: 'audio', engine: "SpeechT5 (HF)" });
+    } catch (e) { return res.status(500).json({ text: `TTS Error: ${e.message}` }); }
+  }
+
+  // --- ENGINE 2: Groq (Llama 3.3 70B - Expert Coding) ---
+  async function callGroqCoding(p) {
     const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${keys.groq}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
-        model: "llama-3.1-8b-instant", // The $0.05/1M token model
+        model: "llama-3.3-70b-versatile", // Expert high-accuracy model
         messages: [{ role: "user", content: p }],
-        temperature: 0.7
+        temperature: 0.3 // Lower temperature for more accurate code
       })
     });
-    if (!resp.ok) throw new Error("Groq API error.");
+    if (!resp.ok) throw new Error("Groq Coding Engine failed.");
     const data = await resp.json();
-    return { text: data.choices[0].message.content, engine: "Llama 3.1 8B (Groq)" };
+    return { text: data.choices[0].message.content, engine: "Llama 3.3 70B (Groq)" };
   }
 
-  // --- FALLBACK ENGINE: Gemini 1.5 Flash ---
+  // --- ENGINE 3: Gemini (Chat & Video Scene Logic) ---
   async function callGemini(p) {
     const resp = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${keys.gemini}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contents: [{ parts: [{ text: p }] }] })
     });
-    if (!resp.ok) throw new Error("Gemini API error.");
+    if (!resp.ok) throw new Error("Gemini low-cost model failed.");
     const data = await resp.json();
     return { text: data.candidates[0].content.parts[0].text, engine: "Gemini 1.5 Flash" };
   }
 
+  // --- ENGINE 4: Hugging Face Video (Wan 2.2 via T2V-5B) ---
+  async function callHFVideo(p) {
+    const resp = await fetch(
+      "https://api-inference.huggingface.co/models/Wan-AI/Wan2.2-TI2V-5B",
+      {
+        headers: { Authorization: `Bearer ${keys.hf}`, "Content-Type": "application/json" },
+        method: "POST",
+        body: JSON.stringify({ inputs: p }),
+      }
+    );
+    // Many HF video models return a processing URL or require multiple polling steps
+    if (!resp.ok) throw new Error("Hugging Face Video API failed.");
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+    // Usually returns a processed asset URL or Base64 in data.output
+    return { data: data.output || data.processing_url, type: 'video', engine: "Wan 2.2 (HF)" };
+  }
+
   try {
-    if (mode === 'image') return res.status(200).json(await callHuggingFaceImage(prompt));
+    // IMAGE generation disabled as per request (not in required engine list).
+    if (mode === 'image') return res.status(200).json({ text: "Image generation disabled. Use Chat/Code/Video modes.", type: 'text' });
 
-    const finalPrompt = mode === 'video' 
-      ? `Create a cinematic, frame-by-frame visual storyboard for a 5-second video: ${prompt}` 
-      : mode === 'code' ? `Write professional, production-ready code for: ${prompt}` : prompt;
-
-    // Try Groq first (Lowest cost)
-    try {
-      if (keys.groq) return res.status(200).json(await callGroq(finalPrompt));
-    } catch (e) {
-      console.warn("Groq failed, switching to Gemini.");
+    // 1. VIDEO MODE (Using Wan 2.2 via Gemini scripting fallback)
+    if (mode === 'video') {
+      try {
+        // Try direct video generation first
+        return res.status(200).json(await callHFVideo(prompt));
+      } catch (videoError) {
+        // Fallback: Generate cinematic scene script via Gemini
+        console.warn("Video Gen failed, falling back to scene script.");
+        const scriptPrompt = `Act as a cinematic director. Write a highly technical visual script for a 5-second video scene based on: ${prompt}`;
+        const script = await callGemini(scriptPrompt);
+        return res.status(200).json({ text: `Video Gen failed (${videoError.message}). Here is a scene script: ${script.text}`, type: 'text', engine: "Gemini 1.5 Fallback" });
+      }
     }
-    
-    // Fallback to Gemini
-    return res.status(200).json(await callGemini(finalPrompt));
+
+    // 2. CODE MODE (Groq Llama 3.3 70B - Expert Coding)
+    if (mode === 'code') {
+      return res.status(200).json(await callGroqCoding(`Write expert code with comments: ${prompt}`));
+    }
+
+    // 3. CHAT MODE (Gemini 1.5 Flash - Low Cost)
+    return res.status(200).json(await callGemini(prompt));
 
   } catch (err) {
-    return res.status(500).json({ text: err.message, type: 'text' });
+    return res.status(500).json({ text: `AI Cluster offline: ${err.message}`, type: 'text' });
   }
 }
