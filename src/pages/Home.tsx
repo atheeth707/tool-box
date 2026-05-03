@@ -32,7 +32,7 @@ export default function Home() {
             TOOL<span className="text-blue-600">BOX</span> AI
           </h1>
           <p className="text-gray-500 dark:text-gray-400 font-medium">
-            Everything you need, powered by Agentic AI.[cite: 33]
+            Everything you need, powered by Agentic AI.
           </p>
         </div>
 
@@ -46,7 +46,7 @@ export default function Home() {
               <Paperclip size={22} />
             </div>
             <div className="flex-grow py-3 text-gray-400 text-lg font-medium">
-              Message the Agentic AI...[cite: 33]
+              Message the Agentic AI...
             </div>
             <div className="bg-blue-600 p-3 rounded-2xl text-white shadow-lg shadow-blue-500/30 group-hover:scale-105 transition-transform">
               <Send size={22} />
