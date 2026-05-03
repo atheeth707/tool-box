@@ -5,15 +5,15 @@ export default async function handler(req, res) {
   const GEMINI_KEY = process.env.GEMINI_API_KEY;
   const GROQ_KEY = process.env.GROQ_API_KEY;
 
-  // Debugging: Check keys without exposing them
-  console.log(`Runtime Check - Gemini: ${!!GEMINI_KEY}, Groq: ${!!GROQ_KEY}`);
-
   if (!GEMINI_KEY && !GROQ_KEY) {
-    return res.status(500).json({ text: "Backend Error: API Keys are missing in Vercel." });
+    return res.status(500).json({ text: "Error: API Keys are missing in Vercel." });
   }
 
-  try {
-    // Attempt 1: Gemini 1.5 Flash (v1beta)
+  let geminiError = "Key not configured";
+  let groqError = "Key not configured";
+
+  // Attempt 1: Gemini 1.5 Flash
+  if (GEMINI_KEY) {
     try {
       const gResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
         method: 'POST',
@@ -21,12 +21,20 @@ export default async function handler(req, res) {
         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
       });
       const gData = await gResp.json();
-      if (gData.candidates?.[0]?.content?.parts?.[0]?.text) {
-        return res.status(200).json({ text: gData.candidates[0].content.parts[0].text });
-      }
-    } catch (e) { console.error("Gemini Engine Failure:", e.message); }
 
-    // Attempt 2: Groq Llama 3 (Backup)
+      if (gResp.ok && gData.candidates?.[0]?.content?.parts?.[0]?.text) {
+        return res.status(200).json({ text: gData.candidates[0].content.parts[0].text });
+      } else {
+        // Capture the exact API error
+        geminiError = gData.error?.message || "Invalid JSON structure";
+      }
+    } catch (e) {
+      geminiError = "Fetch failed - " + e.message;
+    }
+  }
+
+  // Attempt 2: Groq (Backup)
+  if (GROQ_KEY) {
     try {
       const qResp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
@@ -40,14 +48,20 @@ export default async function handler(req, res) {
         })
       });
       const qData = await qResp.json();
-      if (qData.choices?.[0]?.message?.content) {
+
+      if (qResp.ok && qData.choices?.[0]?.message?.content) {
         return res.status(200).json({ text: qData.choices[0].message.content });
+      } else {
+         // Capture the exact API error
+        groqError = qData.error?.message || "Invalid JSON structure";
       }
-    } catch (e) { console.error("Groq Engine Failure:", e.message); }
-
-    throw new Error("No providers responded with valid data.");
-
-  } catch (err) {
-    return res.status(500).json({ text: `AI Cluster Offline: ${err.message}` });
+    } catch (e) {
+      groqError = "Fetch failed - " + e.message;
+    }
   }
+
+  // If both fail, return the EXACT errors to the frontend chat UI
+  return res.status(500).json({ 
+    text: `AI Offline.\n\nGemini Error: ${geminiError}\n\nGroq Error: ${groqError}` 
+  });
 }
