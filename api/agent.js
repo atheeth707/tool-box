@@ -23,45 +23,45 @@ export default async function handler(req, res) {
   }
 
   try {
-    // --- TTS (Hugging Face) ---
+    // --- 1. TTS (Hugging Face) ---
     if (textToSpeak) {
       const ttsResp = await fetchWithRetry("https://api-inference.huggingface.co/models/microsoft/speecht5_tts", {
         headers: { Authorization: `Bearer ${keys.hf}`, "Content-Type": "application/json" },
         method: "POST",
         body: JSON.stringify({ inputs: textToSpeak.substring(0, 500) }),
       });
-      if (!ttsResp.ok) throw new Error(`TTS API failed: ${ttsResp.status}`);
+      if (!ttsResp.ok) throw new Error(`TTS Error: ${ttsResp.status}`);
       const buffer = await ttsResp.arrayBuffer();
       return res.status(200).json({ data: `data:audio/mpeg;base64,${Buffer.from(buffer).toString('base64')}`, type: 'audio' });
     }
 
-    // --- Image (Hugging Face - Using Stable Diffusion XL) ---
+    // --- 2. Image (Hugging Face - Stable Diffusion XL via Router) ---
     if (mode === 'image') {
       const imgResp = await fetchWithRetry("https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0", {
         headers: { Authorization: `Bearer ${keys.hf}`, "Content-Type": "application/json" },
         method: "POST",
         body: JSON.stringify({ inputs: prompt }),
       });
-      if (!imgResp.ok) throw new Error(`Image API Error ${imgResp.status}. Check your HF_TOKEN.`);
+      if (!imgResp.ok) throw new Error(`Image API Error: ${imgResp.status}. Verify HF_TOKEN is a 'Read' or 'Write' token.`);
       const buffer = await imgResp.arrayBuffer();
       return res.status(200).json({ data: `data:image/png;base64,${Buffer.from(buffer).toString('base64')}`, type: 'image' });
     }
 
-    // --- Video (Hugging Face - Using AnimateDiff) ---
+    // --- 3. Video (Hugging Face - AnimateDiff) ---
     if (mode === 'video') {
       const vidResp = await fetchWithRetry("https://api-inference.huggingface.co/models/guoyww/AnimateDiff", {
         headers: { Authorization: `Bearer ${keys.hf}`, "Content-Type": "application/json" },
         method: "POST",
         body: JSON.stringify({ inputs: prompt }),
       });
-      if (!vidResp.ok) throw new Error(`Video API Error ${vidResp.status}. This model might be offline.`);
+      if (!vidResp.ok) throw new Error(`Video API Error: ${vidResp.status}. Model may be loading.`);
       const buffer = await vidResp.arrayBuffer();
       return res.status(200).json({ data: `data:video/mp4;base64,${Buffer.from(buffer).toString('base64')}`, type: 'video' });
     }
 
-    // --- Chat (Google Gemini - Fixed Version and Model Name) ---
-    // Using gemini-1.5-flash-latest to ensure it's found on v1beta
-    const gemUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${keys.gemini}`;
+    // --- 4. Chat (Google Gemini 2.5 Flash - NEWEST) ---
+    // gemini-1.5 is retired; using the stable 2.5 release
+    const gemUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${keys.gemini}`;
     const gemResp = await fetch(gemUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -69,13 +69,10 @@ export default async function handler(req, res) {
     });
     
     const gemData = await gemResp.json();
-    if (gemData.error) throw new Error(gemData.error.message);
-    if (!gemData.candidates || !gemData.candidates[0]) throw new Error("Gemini returned empty results.");
-    
+    if (gemData.error) throw new Error(`Gemini Error: ${gemData.error.message}`);
     return res.status(200).json({ text: gemData.candidates[0].content.parts[0].text });
 
   } catch (err) {
-    console.error("Backend Error:", err.message);
     return res.status(500).json({ error: err.message });
   }
 }
