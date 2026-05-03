@@ -41,7 +41,7 @@ export default function Home() {
           All-in-One <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Free Tools</span>
         </h1>
         <p className="text-xs md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto px-4 md:px-6">
-          Fast, secure, and no login required.
+          Fast and Secure.
         </p>
         
         <div className="max-w-2xl mx-auto relative mt-4 md:mt-8 px-2 md:px-4">
