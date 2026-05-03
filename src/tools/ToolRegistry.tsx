@@ -1,3 +1,4 @@
+import AgenticAI from './AgenticAI'
 import AIFaceSwap from './AIFaceSwap'
 import AISpeechGenerator from './AISpeechGenerator'
 import Textbooks2 from './Textbooks2'
@@ -316,6 +317,7 @@ export const ToolComponents: Record<string, React.FC> = {
 '10thbooks': Textbooks2,
 'ai-speech-generator': AISpeechGenerator,
 'ai-faceswap': AIFaceSwap,
+'agentic-ai': AgenticAI,
 };
 
 export const getToolComponent = (id: string) => {
