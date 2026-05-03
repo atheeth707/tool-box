@@ -9,8 +9,8 @@ export default async function handler(req, res) {
     hf: process.env.HF_TOKEN,
   };
 
-  async function fetchHF(modelId, input) {
-    // The wait_for_model: true option is critical to avoid 503 and 404 errors during cold starts[cite: 14]
+  // Helper to call HF with wait_for_model and retry logic
+  async function callHF(modelId, input) {
     const response = await fetch(`https://api-inference.huggingface.co/models/${modelId}`, {
       headers: { 
         Authorization: `Bearer ${keys.hf}`, 
@@ -19,18 +19,23 @@ export default async function handler(req, res) {
       method: "POST",
       body: JSON.stringify({ 
         inputs: input,
-        options: { wait_for_model: true } 
+        options: { wait_for_model: true } // Prevents 404/503 during cold starts
       }),
     });
     return response;
   }
 
   try {
-    // --- IMAGE GENERATION (Using SD v1.5 for maximum reliability) ---
+    // --- IMAGE: Fallback System[cite: 14] ---
     if (mode === 'image') {
-      const imgResp = await fetchHF("runwayml/stable-diffusion-v1-5", prompt);
-      if (!imgResp.ok) throw new Error(`HF Image Error: ${imgResp.status}`);
+      let imgResp = await callHF("runwayml/stable-diffusion-v1-5", prompt);
       
+      // Fallback if the first model is 404 or down
+      if (!imgResp.ok) {
+        imgResp = await callHF("stabilityai/stable-diffusion-2-1", prompt);
+      }
+      
+      if (!imgResp.ok) throw new Error(`HF Image Error: ${imgResp.status}`);
       const buffer = await imgResp.arrayBuffer();
       return res.status(200).json({ 
         data: `data:image/png;base64,${Buffer.from(buffer).toString('base64')}`, 
@@ -38,11 +43,16 @@ export default async function handler(req, res) {
       });
     }
 
-    // --- VIDEO GENERATION (Using ModelScope) ---
+    // --- VIDEO: Fallback System[cite: 14] ---
     if (mode === 'video') {
-      const vidResp = await fetchHF("damo-vilab/modelscope-damo-text-to-video", prompt);
-      if (!vidResp.ok) throw new Error(`HF Video Error: ${vidResp.status}`);
+      let vidResp = await callHF("damo-vilab/modelscope-damo-text-to-video", prompt);
       
+      // Fallback for video
+      if (!vidResp.ok) {
+        vidResp = await callHF("ali-vilab/text-to-video-ms-1.5", prompt);
+      }
+
+      if (!vidResp.ok) throw new Error(`HF Video Error: ${vidResp.status}`);
       const buffer = await vidResp.arrayBuffer();
       return res.status(200).json({ 
         data: `data:video/mp4;base64,${Buffer.from(buffer).toString('base64')}`, 

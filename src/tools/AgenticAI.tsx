@@ -48,21 +48,21 @@ export default function AgenticAI() {
   return (
     <div className="flex h-screen bg-[#050505] text-zinc-100 font-sans">
       <div className="flex-grow flex flex-col items-center">
-        {/* Navigation Header */}
+        {/* Header Section */}
         <div className="w-full max-w-5xl p-5 flex justify-between items-center border-b border-white/5 bg-black/40 backdrop-blur-2xl">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 bg-blue-600 rounded flex items-center justify-center font-bold text-[10px]">AI</div>
-            <span className="font-bold tracking-tight text-sm uppercase opacity-70">Unified Media Engine</span>
+            <span className="font-bold tracking-tight text-sm uppercase opacity-70">Multimedia Engine</span>
           </div>
           <button 
             onClick={() => { setMessages([]); localStorage.removeItem('arena_v5_data'); }} 
-            className="p-2 hover:bg-white/5 rounded-full text-zinc-600 transition-all hover:text-red-500"
+            className="p-2 hover:bg-white/5 rounded-full text-zinc-600 transition-all hover:text-white"
           >
             <Trash2 size={16} />
           </button>
         </div>
 
-        {/* Message Feed */}
+        {/* Chat Feed */}
         <div className="w-full max-w-3xl flex-grow overflow-y-auto px-6 py-10 space-y-12" ref={scrollRef}>
           {messages.map((m, i) => (
             <div key={i} className="flex gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -83,12 +83,12 @@ export default function AgenticAI() {
           {loading && (
             <div className="flex items-center gap-2 text-zinc-600 text-xs animate-pulse pl-16">
               <Loader2 size={14} className="animate-spin"/> 
-              AI is processing {mode}. Generation may take up to 30 seconds...
+              AI is processing your {mode}. This may take 30-45 seconds[cite: 14]...
             </div>
           )}
         </div>
 
-        {/* Interaction Bar */}
+        {/* Input Controls */}
         <div className="w-full max-w-3xl p-6 pb-12">
           <div className="bg-[#0f0f0f] border border-white/10 rounded-[28px] p-2 shadow-2xl">
             <div className="flex gap-1 mb-2 px-1">
