@@ -1,47 +1,46 @@
-export const config = {
-  runtime: 'edge', // Edge runtime handles streams much better than standard serverless
-};
+export default async function handler(req, res) {
+  // 1. Setup CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+  if (req.method === 'OPTIONS') return res.status(204).end();
 
-export default async function handler(req) {
-  if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 });
+  // 2. Environment Variable Validation
+  const keys = {
+    gemini: process.env.GEMINI_API_KEY,
+    hf: process.env.HF_TOKEN,
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL,
+    supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+  };
 
-  try {
-    const { prompt, mode = 'chat' } = await req.json();
-    const HF_TOKEN = process.env.HF_TOKEN;
-    const GEMINI_KEY = process.env.GEMINI_API_KEY;
+  // 3. Handle GET (For your Supabase Config check)
+  if (req.method === 'GET') {
+    return res.status(200).json({
+      url: keys.supabaseUrl,
+      key: keys.supabaseKey,
+      status: keys.gemini ? "AI_ACTIVE" : "AI_MISSING_KEYS"
+    });
+  }
 
-    // --- STREAMING CHAT (Fixes Timeouts) ---
-    if (mode === 'chat') {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent?alt=sse&key=${GEMINI_KEY}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-        }
-      );
+  // 4. Handle POST (For AI Requests)
+  if (req.method === 'POST') {
+    const { prompt, mode } = req.body;
 
-      return new Response(response.body, {
-        headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' },
+    if (!keys.gemini) return res.status(500).json({ error: "GEMINI_API_KEY is not set in Vercel." });
+
+    try {
+      const aiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${keys.gemini}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
       });
-    }
 
-    // --- INSTANT IMAGE (SDXL-Turbo) ---
-    if (mode === 'image') {
-      const res = await fetch("https://api-inference.huggingface.co/models/stabilityai/sdxl-turbo", {
-        headers: { Authorization: `Bearer ${HF_TOKEN}`, "Content-Type": "application/json" },
-        method: "POST",
-        body: JSON.stringify({ inputs: prompt }),
+      const data = await aiRes.json();
+      return res.status(200).json({ 
+        text: data.candidates[0].content.parts[0].text,
+        type: 'text'
       });
-
-      if (res.status === 503) return new Response(JSON.stringify({ error: "Engine Waking Up..." }), { status: 200 });
-      
-      const buffer = await res.arrayBuffer();
-      const base64 = Buffer.from(buffer).toString('base64');
-      return new Response(JSON.stringify({ data: `data:image/jpeg;base64,${base64}`, type: 'image' }), { status: 200 });
+    } catch (err) {
+      return res.status(500).json({ error: "Internal AI Link Error" });
     }
-
-  } catch (err) {
-    return new Response(JSON.stringify({ error: "Nexus Link Reset" }), { status: 500 });
   }
 }
