@@ -1,42 +1,27 @@
 import { Buffer } from 'buffer';
 
 export default async function handler(req, res) {
+  // Always return JSON to prevent frontend parsing errors
   res.setHeader('Content-Type', 'application/json');
-  if (req.method !== 'POST') return res.status(405).json({ error: "Invalid Method" });
+
+  if (req.method !== 'POST') return res.status(405).json({ error: "Method Not Allowed" });
 
   const { prompt, mode = 'chat' } = req.body;
   const HF_TOKEN = process.env.HF_TOKEN;
   const GEMINI_KEY = process.env.GEMINI_API_KEY;
 
-  async function fetchWithRetry(url, body, retries = 3) {
-    for (let i = 0; i < retries; i++) {
-      const response = await fetch(url, {
+  try {
+    // --- IMAGE: Using SD-1.5 (The fastest free model) ---
+    if (mode === 'image') {
+      const response = await fetch("https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5", {
         headers: { Authorization: `Bearer ${HF_TOKEN}`, "Content-Type": "application/json" },
         method: "POST",
-        body: JSON.stringify(body),
+        body: JSON.stringify({ inputs: prompt, options: { wait_for_model: false } }),
       });
 
-      if (response.ok) return response;
-      
-      // If 503 (Loading), wait 10 seconds and try again
-      if (response.status === 503 && i < retries - 1) {
-        await new Promise(resolve => setTimeout(resolve, 10000));
-        continue;
-      }
-      return response;
-    }
-  }
+      if (response.status === 503) return res.status(200).json({ error: "System is warming up. Try again in 5 seconds." });
+      if (!response.ok) throw new Error("Image service busy.");
 
-  try {
-    if (mode === 'image') {
-      // Using FLUX.1-schnell: Fast and high quality
-      const response = await fetchWithRetry(
-        "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell",
-        { inputs: prompt }
-      );
-      
-      if (!response.ok) throw new Error("Image engine is warming up. Try again in 10 seconds.");
-      
       const buffer = await response.arrayBuffer();
       return res.status(200).json({ 
         data: `data:image/png;base64,${Buffer.from(buffer).toString('base64')}`, 
@@ -44,14 +29,16 @@ export default async function handler(req, res) {
       });
     }
 
+    // --- VIDEO: Optimized ModelScope ---
     if (mode === 'video') {
-      const response = await fetchWithRetry(
-        "https://api-inference.huggingface.co/models/ali-vilab/text-to-video-ms-1.7b",
-        { inputs: prompt }
-      );
-      
-      if (!response.ok) throw new Error("Video engine is currently busy. Try a shorter prompt.");
-      
+      const response = await fetch("https://api-inference.huggingface.co/models/ali-vilab/text-to-video-ms-1.7b", {
+        headers: { Authorization: `Bearer ${HF_TOKEN}`, "Content-Type": "application/json" },
+        method: "POST",
+        body: JSON.stringify({ inputs: prompt }),
+      });
+
+      if (!response.ok) return res.status(200).json({ error: "Video generation is currently queued." });
+
       const buffer = await response.arrayBuffer();
       return res.status(200).json({ 
         data: `data:video/mp4;base64,${Buffer.from(buffer).toString('base64')}`, 
@@ -59,23 +46,22 @@ export default async function handler(req, res) {
       });
     }
 
-    // Default Chat: Gemini 2.0 Flash
-    const gemRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`, {
+    // --- CHAT: Gemini 1.5 Flash (Fastest response time) ---
+    const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
     });
 
-    const gemData = await gemRes.json();
-    if (gemData.error) throw new Error(gemData.error.message);
+    const geminiData = await geminiRes.json();
+    if (geminiData.error) throw new Error(geminiData.error.message);
 
     return res.status(200).json({ 
-      text: gemData.candidates[0].content.parts[0].text,
+      text: geminiData.candidates[0].content.parts[0].text,
       type: 'text'
     });
 
   } catch (err) {
-    // Return the specific error as a valid JSON object
-    return res.status(200).json({ error: err.message, type: 'text' });
+    return res.status(200).json({ error: "Interface connection reset. Please resend.", type: 'text' });
   }
 }

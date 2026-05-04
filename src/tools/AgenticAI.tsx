@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Loader2, MessageSquare, ImageIcon, Video, Trash2, User, Sparkles } from 'lucide-react';
+import { Send, Loader2, MessageSquare, ImageIcon, Video, Trash2, User, Zap } from 'lucide-react';
 
 export default function AgenticAI() {
   const [prompt, setPrompt] = useState('');
   const [messages, setMessages] = useState<any[]>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('nexus_final_v11');
+      const saved = localStorage.getItem('nexus_stealth_v1');
       return saved ? JSON.parse(saved) : [];
     }
     return [];
@@ -15,15 +15,15 @@ export default function AgenticAI() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    localStorage.setItem('nexus_final_v11', JSON.stringify(messages));
+    localStorage.setItem('nexus_stealth_v1', JSON.stringify(messages));
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, loading]);
 
   const handleSend = async () => {
     if (!prompt.trim() || loading) return;
     
-    const userInput = prompt;
-    setMessages(prev => [...prev, { role: 'user', content: userInput, type: 'text' }]);
+    const currentInput = prompt;
+    setMessages(prev => [...prev, { role: 'user', content: currentInput, type: 'text' }]);
     setLoading(true);
     setPrompt('');
 
@@ -31,73 +31,59 @@ export default function AgenticAI() {
       const res = await fetch('/api/agent_9', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: userInput, mode }),
+        body: JSON.stringify({ prompt: currentInput, mode }),
       });
       
-      const data = await res.json();
-      
-      // If the backend sent an error inside the JSON
-      if (data.error) {
-        setMessages(prev => [...prev, { role: 'assistant', content: data.error, type: 'text' }]);
-      } else {
-        setMessages(prev => [...prev, { 
-          role: 'assistant', 
-          content: data.data || data.text, 
-          type: data.type || 'text'
-        }]);
+      // Safety: check if response is actually JSON before parsing
+      const contentType = res.headers.get("content-type");
+      if (!res.ok || !contentType || !contentType.includes("application/json")) {
+        throw new Error("Nexus link timed out. Retrying recommended.");
       }
-    } catch (err) {
+
+      const data = await res.json();
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: "Network synchronization error. Please check your connection and try again.", 
-        type: 'text' 
+        content: data.error || data.data || data.text, 
+        type: data.error ? 'text' : (data.type || 'text')
       }]);
+    } catch (err: any) {
+      setMessages(prev => [...prev, { role: 'assistant', content: "Protocol interrupted. Please try again.", type: 'text' }]);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex h-screen bg-[#020202] text-zinc-100 font-sans selection:bg-blue-500/30">
+    <div className="flex h-screen bg-[#010101] text-zinc-100 font-sans">
       <div className="flex-grow flex flex-col items-center relative overflow-hidden">
         
-        {/* Header */}
-        <div className="w-full max-w-5xl p-6 flex justify-between items-center border-b border-white/5 bg-black/40 backdrop-blur-3xl z-10">
+        {/* Stealth Header */}
+        <div className="w-full max-w-5xl p-6 flex justify-between items-center border-b border-white/5 bg-black/80 backdrop-blur-xl z-20">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-              <Sparkles size={18} className="text-white" />
+            <div className="w-10 h-10 bg-zinc-100 rounded-full flex items-center justify-center">
+              <Zap size={20} className="text-black fill-black" />
             </div>
             <div>
-              <h1 className="font-bold text-[11px] uppercase tracking-[0.3em] text-white/80">Nexus Intelligence</h1>
-              <div className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
-                <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest">Protocol v11.0</span>
-              </div>
+              <h1 className="font-black text-xs uppercase tracking-[0.4em]">Nexus Core</h1>
+              <span className="text-[8px] text-zinc-500 font-bold uppercase">System: Operational</span>
             </div>
           </div>
-          <button onClick={() => { setMessages([]); localStorage.removeItem('nexus_final_v11'); }} className="p-3 bg-white/5 hover:bg-red-500/10 rounded-xl text-zinc-600 transition-all hover:text-red-400">
+          <button onClick={() => { setMessages([]); localStorage.removeItem('nexus_stealth_v1'); }} className="p-2 hover:bg-white/5 rounded-lg text-zinc-700 transition-colors">
             <Trash2 size={16} />
           </button>
         </div>
 
-        {/* Messaging Area */}
-        <div className="w-full max-w-4xl flex-grow overflow-y-auto px-6 py-12 space-y-12" ref={scrollRef}>
+        {/* Clean Output Feed */}
+        <div className="w-full max-w-3xl flex-grow overflow-y-auto px-6 py-10 space-y-12 scrollbar-hide" ref={scrollRef}>
           {messages.map((m, i) => (
-            <div key={i} className={`flex gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 ${m.role === 'user' ? 'flex-row-reverse' : ''}`}>
-              <div className={`w-10 h-10 rounded-2xl shrink-0 flex items-center justify-center border shadow-xl ${m.role === 'user' ? 'bg-zinc-900 border-white/10' : 'bg-blue-600 text-white border-blue-400/20'}`}>
-                {m.role === 'user' ? <User size={18} /> : <Sparkles size={18} />}
-              </div>
-              <div className={`flex-grow max-w-[85%] ${m.role === 'user' ? 'text-right' : 'text-left'}`}>
+            <div key={i} className={`flex gap-6 animate-in fade-in slide-in-from-bottom-2 duration-300 ${m.role === 'user' ? 'flex-row-reverse' : ''}`}>
+              <div className={`flex-grow max-w-[85%] ${m.role === 'user' ? 'text-right' : ''}`}>
                 {m.type === 'image' ? (
-                  <div className="rounded-[32px] overflow-hidden border border-white/10 shadow-2xl bg-zinc-900 transition-transform hover:scale-[1.01]">
-                    <img src={m.content} className="w-full h-auto block" alt="AI Generation" />
-                  </div>
+                  <img src={m.content} className="rounded-2xl border border-white/5 shadow-2xl w-full" alt="Visual" />
                 ) : m.type === 'video' ? (
-                  <div className="rounded-[32px] overflow-hidden border border-white/10 shadow-2xl bg-black">
-                    <video src={m.content} controls autoPlay loop className="w-full" />
-                  </div>
+                  <video src={m.content} controls autoPlay loop className="rounded-2xl border border-white/5 shadow-2xl w-full" />
                 ) : (
-                  <div className={`inline-block p-6 rounded-[28px] text-[15px] leading-relaxed tracking-wide ${m.role === 'user' ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-white/5 text-zinc-200 border border-white/5 backdrop-blur-xl rounded-tl-none shadow-sm'}`}>
+                  <div className={`inline-block p-5 rounded-2xl text-[14px] font-medium leading-relaxed ${m.role === 'user' ? 'bg-zinc-100 text-black' : 'bg-zinc-900/50 text-zinc-300 border border-white/5'}`}>
                     {m.content}
                   </div>
                 )}
@@ -105,42 +91,36 @@ export default function AgenticAI() {
             </div>
           ))}
           {loading && (
-            <div className="flex items-center gap-4 text-blue-500 text-[11px] font-black uppercase tracking-[0.2em] pl-16 opacity-70 animate-pulse">
-              <Loader2 size={16} className="animate-spin"/> 
-              Synthesizing Result...
+            <div className="flex items-center gap-3 text-zinc-600 text-[10px] font-bold tracking-[0.2em] uppercase pl-2 animate-pulse">
+              <Loader2 size={12} className="animate-spin"/> Synchronizing...
             </div>
           )}
         </div>
 
-        {/* Input Control */}
-        <div className="w-full max-w-4xl p-8">
-          <div className="bg-[#0c0c0c] border border-white/10 rounded-[40px] p-2.5 shadow-2xl">
-            <div className="flex gap-2 mb-2 px-3">
+        {/* Floating Input Dock */}
+        <div className="w-full max-w-2xl p-6 mb-4">
+          <div className="bg-[#0a0a0a] border border-white/10 rounded-[2rem] p-2 shadow-3xl">
+            <div className="flex gap-1 mb-2 px-2">
               {['chat', 'image', 'video'].map(t => (
                 <button 
                   key={t} 
                   onClick={() => setMode(t as any)} 
-                  className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${mode === t ? 'bg-white text-black shadow-lg shadow-white/5' : 'text-zinc-600 hover:text-zinc-300 hover:bg-white/5'}`}
+                  className={`px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest transition-all ${mode === t ? 'bg-zinc-100 text-black' : 'text-zinc-600 hover:text-white'}`}
                 >
                   {t}
                 </button>
               ))}
             </div>
-            <div className="flex items-center gap-4 px-5 pb-3">
-              <textarea 
-                rows={1} 
+            <div className="flex items-center gap-3 px-4 pb-2">
+              <input 
                 value={prompt} 
                 onChange={e => setPrompt(e.target.value)} 
-                onKeyDown={e => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())} 
-                placeholder={`Request ${mode} synthesis...`} 
-                className="flex-grow bg-transparent py-3 outline-none text-sm text-zinc-100 resize-none placeholder-zinc-800 font-medium" 
+                onKeyDown={e => e.key === 'Enter' && handleSend()} 
+                placeholder="Type your command..." 
+                className="flex-grow bg-transparent py-2 outline-none text-sm text-zinc-200 placeholder-zinc-800" 
               />
-              <button 
-                onClick={handleSend} 
-                disabled={loading || !prompt.trim()}
-                className="bg-blue-600 text-white p-4 rounded-3xl hover:bg-blue-500 transition-all active:scale-90 shadow-xl shadow-blue-600/30 disabled:opacity-20"
-              >
-                <Send size={20} />
+              <button onClick={handleSend} disabled={loading} className="bg-white text-black p-3 rounded-full hover:scale-105 active:scale-95 transition-all disabled:opacity-10">
+                <Send size={16} />
               </button>
             </div>
           </div>
