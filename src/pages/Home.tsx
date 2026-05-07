@@ -81,31 +81,21 @@ export default function Home() {
             />
           </div>
 
-       {/* Hero Buttons */}
-<div className="flex justify-center mt-5 gap-3 flex-wrap">
+     {/* AI Store Button */}
+<div className="flex justify-center mt-5">
 
-  <a
-    href="#categories-section"
-    className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:scale-105 transition-all text-white font-semibold shadow-lg shadow-blue-500/20"
+  <Link
+    to="/ai-store"
+    className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:scale-105 transition-all text-white font-semibold shadow-xl shadow-violet-500/20"
   >
 
     <Sparkles className="w-4 h-4" />
 
-    Explore Tools
-
-  </a>
-
-  <Link
-    to="/category/ai-tools"
-    className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all text-gray-900 dark:text-white font-semibold"
-  >
-
-    AI Tools
+    Open AI Store
 
   </Link>
 
 </div>
-
           {/* Search Results */}
           {searchQuery.length > 1 && (
             <div className="absolute top-full left-2 right-2 md:left-4 md:right-4 mt-1 md:mt-2 bg-white dark:bg-gray-800 rounded-lg md:rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden z-50 text-left">

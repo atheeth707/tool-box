@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-
+import AIStore from './pages/AIStore';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Category from './pages/Category';
@@ -12,6 +12,12 @@ function App() {
     <BrowserRouter>
 
       <Routes>
+
+<Route
+  path="ai-store"
+  element={<AIStore />}
+/>
+
 
         <Route
           path="/"
