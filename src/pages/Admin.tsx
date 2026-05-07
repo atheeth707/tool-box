@@ -10,7 +10,7 @@ export default function Admin() {
   const [loading, setLoading] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
 
-  // CHANGE THIS TO YOUR GOOGLE EMAIL
+  // YOUR CONFIGURED EMAIL
   const ADMIN_EMAIL = "atheeth707@gmail.com"; 
 
   useEffect(() => {
@@ -59,6 +59,23 @@ export default function Admin() {
       fetchItems();
     }
     setLoading(false);
+  };
+
+  // NEW: Delete function added here
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this post?")) return;
+
+    const { error } = await supabase
+      .from('store_items')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      alert("Delete Error: " + error.message);
+    } else {
+      // Instantly update the UI list
+      setItems(items.filter(item => item.id !== id));
+    }
   };
 
   if (authLoading) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-blue-500" /></div>;
@@ -156,7 +173,10 @@ export default function Admin() {
               </div>
               <div className="p-4 flex justify-between items-center">
                 <span className="font-bold truncate mr-2">{item.title}</span>
-                <button className="text-red-500 p-2 hover:bg-red-500/10 rounded-lg transition-colors">
+                <button 
+                  onClick={() => handleDelete(item.id)} // <--- DELETE ACTION ADDED HERE
+                  className="text-red-500 p-2 hover:bg-red-500/10 rounded-lg transition-colors"
+                >
                   <Trash2 size={16} />
                 </button>
               </div>
