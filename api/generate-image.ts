@@ -1,4 +1,84 @@
-const userCooldowns = new Map();
+import { createClient } from "@supabase/supabase-js";
+
+export default async function handler(req: any, res: any) {
+  try {
+    const { userId, prompt, style } = req.body;
+
+    if (!userId || !prompt || !style) {
+      return res.status(400).json({ error: "Missing data" });
+    }
+
+    const supabase = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    // 1. GET USER CREDITS
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("credits")
+      .eq("id", userId)
+      .single();
+
+    if (!profile || profile.credits <= 0) {
+      return res.status(403).json({ error: "No credits" });
+    }
+
+    // 2. STYLE PROMPTS (hidden)
+    const STYLE_MAP: any = {
+      cinematic:
+        "cinematic lighting, ultra realistic, film grain, 85mm lens, dramatic shadows",
+      anime:
+        "anime style, clean line art, vibrant colors, highly detailed illustration",
+      luxury:
+        "luxury product photography, studio lighting, premium advertisement style",
+      poster:
+        "movie poster, cinematic composition, dramatic lighting, ultra detailed",
+      thumbnail:
+        "viral youtube thumbnail, high contrast, expressive face, bold composition",
+      wallpaper:
+        "minimal aesthetic wallpaper, soft gradients, ultra clean modern design"
+    };
+
+    const finalPrompt = `${STYLE_MAP[style] || ""}, ${prompt}`;
+
+    // 3. CALL STABILITY AI
+    const response = await fetch(
+      "https://api.stability.ai/v2beta/stable-image/generate/core",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.STABILITY_API_KEY}`,
+          "Content-Type": "application/json",
+          Accept: "application/json"
+        },
+        body: JSON.stringify({
+          prompt: finalPrompt,
+          output_format: "png"
+        })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!data.image) {
+      return res.status(500).json({ error: "Image generation failed" });
+    }
+
+    // 4. DEDUCT CREDIT (SAFE SERVER SIDE)
+    await supabase
+      .from("profiles")
+      .update({ credits: profile.credits - 1 })
+      .eq("id", userId);
+
+    // 5. RETURN IMAGE
+    return res.status(200).json({
+      image: data.image
+    });
+  } catch (err) {
+    return res.status(500).json({ error: "Server error" });
+  }
+}const userCooldowns = new Map();
 
 const dailyUsage = {
   date: new Date().toDateString(),
