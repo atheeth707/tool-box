@@ -63,7 +63,7 @@ export default function Home() {
         </h1>
 
         <p className="text-xs md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto px-4 md:px-6">
-          Fast, secure, AI powered and no login required.
+          Fast, secure and free online tools for everyone.
         </p>
 
         <div className="max-w-2xl mx-auto relative mt-4 md:mt-8 px-2 md:px-4">
@@ -81,19 +81,30 @@ export default function Home() {
             />
           </div>
 
-          {/* AI Button */}
-          <div className="flex justify-center mt-5">
+       {/* Hero Buttons */}
+<div className="flex justify-center mt-5 gap-3 flex-wrap">
 
-            <Link
-              to="/ai"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:scale-105 transition-all text-white font-semibold shadow-lg shadow-blue-500/20"
-            >
-              <Sparkles className="w-4 h-4" />
+  <a
+    href="#categories-section"
+    className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:scale-105 transition-all text-white font-semibold shadow-lg shadow-blue-500/20"
+  >
 
-              Ask AI For Any Tool
-            </Link>
+    <Sparkles className="w-4 h-4" />
 
-          </div>
+    Explore Tools
+
+  </a>
+
+  <Link
+    to="/category/ai-tools"
+    className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all text-gray-900 dark:text-white font-semibold"
+  >
+
+    AI Tools
+
+  </Link>
+
+</div>
 
           {/* Search Results */}
           {searchQuery.length > 1 && (

@@ -4,24 +4,23 @@ import Layout from './components/Layout';
 import Home from './pages/Home';
 import Category from './pages/Category';
 import ToolPage from './pages/ToolPage';
-import AI from './tools/AI';
 
 function App() {
+
   return (
+
     <BrowserRouter>
 
       <Routes>
 
-        <Route path="/" element={<Layout />}>
+        <Route
+          path="/"
+          element={<Layout />}
+        >
 
           <Route
             index
             element={<Home />}
-          />
-
-          <Route
-            path="ai"
-            element={<AI />}
           />
 
           <Route
@@ -39,7 +38,9 @@ function App() {
       </Routes>
 
     </BrowserRouter>
+
   );
+
 }
 
 export default App;
