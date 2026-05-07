@@ -1,13 +1,40 @@
 const userCooldowns = new Map();
 
+const dailyUsage = {
+  date: new Date().toDateString(),
+  count: 0
+};
+
 export default async function handler(req, res) {
 
   try {
 
     if (req.method !== 'POST') {
+
       return res.status(405).json({
-        reply: 'Method not allowed'
+        reply: 'Method not allowed.'
       });
+
+    }
+
+    // Reset daily count automatically
+    const today = new Date().toDateString();
+
+    if (dailyUsage.date !== today) {
+
+      dailyUsage.date = today;
+      dailyUsage.count = 0;
+
+    }
+
+    // Daily limit protection
+    if (dailyUsage.count >= 480) {
+
+      return res.status(429).json({
+        reply:
+          'AI is currently busy. Please try again later.'
+      });
+
     }
 
     const ip =
@@ -17,10 +44,10 @@ export default async function handler(req, res) {
 
     const now = Date.now();
 
-    const cooldown = userCooldowns.get(ip);
+    const lastRequest = userCooldowns.get(ip);
 
-    // 3 second cooldown
-    if (cooldown && now - cooldown < 3000) {
+    // Cooldown protection
+    if (lastRequest && now - lastRequest < 4000) {
 
       return res.status(429).json({
         reply:
@@ -31,7 +58,33 @@ export default async function handler(req, res) {
 
     userCooldowns.set(ip, now);
 
+    // Auto cleanup old IPs
+    setTimeout(() => {
+      userCooldowns.delete(ip);
+    }, 10000);
+
     const { message } = req.body;
+
+    // Prevent empty spam
+    if (!message || !message.trim()) {
+
+      return res.status(400).json({
+        reply: 'Please type a message.'
+      });
+
+    }
+
+    // Prevent huge prompts
+    if (message.length > 2000) {
+
+      return res.status(400).json({
+        reply:
+          'Message is too long. Please shorten it.'
+      });
+
+    }
+
+    dailyUsage.count++;
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${process.env.GEMINI_API_KEY}`,
@@ -51,20 +104,20 @@ export default async function handler(req, res) {
               parts: [
                 {
                   text: `
-You are a modern AI assistant.
+You are a smart modern AI assistant.
 
 Behave naturally like ChatGPT.
 
 Rules:
 - Be conversational
-- Be helpful
-- Be smart
-- Give detailed replies
-- Use markdown formatting when useful
+- Be intelligent
+- Be friendly
+- Give useful replies
+- Use markdown formatting
 - Never mention Gemini
 - Never mention Google AI
-- Never mention you are an API
-- Talk naturally like a real assistant
+- Never mention APIs
+- Sound natural
 
 User:
 ${message}
@@ -92,7 +145,9 @@ ${message}
     if (data.error) {
 
       return res.status(500).json({
-        reply: data.error.message
+        reply:
+          data.error.message ||
+          'AI request failed.'
       });
 
     }
