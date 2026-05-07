@@ -19,6 +19,9 @@ function App() {
 />
 
 
+<Route path="/admin-control-panel" 
+element={<Admin />} />
+
         <Route
           path="/"
           element={<Layout />}

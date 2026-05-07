@@ -1,3 +1,6 @@
+if (user?.email !== 'atheeth707@gmail.com') {
+  return <div className="p-20 text-center">Access Denied. Admin only.</div>;
+}
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Upload, Plus, Film, Image as ImageIcon, Trash2 } from 'lucide-react';
