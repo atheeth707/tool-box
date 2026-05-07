@@ -11,7 +11,7 @@ export default async function handler(req, res) {
   const { imageBase64, userId, masterPrompt } = req.body;
 
   try {
-    // 1. Credit Check
+    // 1. Check Profile & Credits
     const { data: profile, error: pError } = await supabase
       .from('profiles')
       .select('credits')
@@ -21,9 +21,9 @@ export default async function handler(req, res) {
     if (pError || !profile) return res.status(404).json({ error: "Profile not found." });
     if (profile.credits < 1) return res.status(402).json({ error: "Out of credits." });
 
-    // 2. CALL GOOGLE GEMINI (IMAGEN)
-    // We use the Imagen 3 / Fast Generate endpoint provided via your Google API Key
-    const GOOGLE_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3-fast-generate:predict?key=${process.env.GEMINI_API_KEY}`;
+    // 2. Call Google Gemini / Imagen 
+    // We use the 'imagen-3.0-generate-001' or 'imagen-3.0-fast-generate-001'
+    const GOOGLE_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-fast-generate-001:predict?key=${process.env.GEMINI_API_KEY}`;
 
     const response = await fetch(GOOGLE_API_URL, {
       method: "POST",
@@ -33,31 +33,39 @@ export default async function handler(req, res) {
           {
             prompt: masterPrompt,
             image: {
-              bytesBase64Encoded: imageBase64 // Google handles the base64 bytes directly
+              bytesBase64Encoded: imageBase64
             }
           }
         ],
         parameters: {
           sampleCount: 1,
-          aspectRatio: "1:1",
-          outputMimeType: "image/png"
         }
       })
     });
 
     const resultData = await response.json();
 
+    // 3. Handle Google's specific "Busy/Limit" errors
     if (!response.ok) {
-      console.error("Google AI Error:", resultData);
-      return res.status(response.status).json({ error: "Google AI Engine busy or limit reached." });
+      console.error("Google Studio Error:", resultData);
+      
+      // If the error is a 429 (Too many requests) or 503 (Busy)
+      if (response.status === 429 || response.status === 503) {
+        return res.status(503).json({ 
+          error: "Google servers are currently busy. Please wait 30 seconds and try again." 
+        });
+      }
+      
+      return res.status(response.status).json({ 
+        error: resultData.error?.message || "AI Engine currently offline." 
+      });
     }
 
-    // 3. EXTRACT IMAGE
-    // Google returns the image in the predictions array as a base64 string
-    const generatedImageBase64 = resultData.predictions[0].bytesBase64Encoded;
-    const finalImage = `data:image/png;base64,${generatedImageBase64}`;
+    // 4. Process Success
+    const generatedImage = resultData.predictions[0].bytesBase64Encoded;
+    const finalImage = `data:image/png;base64,${generatedImage}`;
 
-    // 4. DEDUCT CREDIT
+    // 5. Deduct Credit ONLY if image was actually generated
     const { data: updated } = await supabase
       .from('profiles')
       .update({ credits: profile.credits - 1 })
@@ -71,7 +79,7 @@ export default async function handler(req, res) {
     });
 
   } catch (err) {
-    console.error("Critical Google AI Error:", err);
-    return res.status(500).json({ error: "Google Neural Engine Offline." });
+    console.error("Critical Google Backend Error:", err);
+    return res.status(500).json({ error: "Neural Engine Offline." });
   }
 }
