@@ -53,9 +53,15 @@ How can I help you today?`
           'Content-Type': 'application/json'
         },
 
-        body: JSON.stringify({
-          message: currentMessage
-        })
+       body: JSON.stringify({
+messages: [
+  ...messages.slice(-50),
+    {
+      role: 'user',
+      text: currentMessage
+    }
+  ]
+})
 
       });
 

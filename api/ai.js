@@ -17,7 +17,6 @@ export default async function handler(req, res) {
 
     }
 
-    // Reset daily count automatically
     const today = new Date().toDateString();
 
     if (dailyUsage.date !== today) {
@@ -27,12 +26,11 @@ export default async function handler(req, res) {
 
     }
 
-    // Daily limit protection
     if (dailyUsage.count >= 480) {
 
       return res.status(429).json({
         reply:
-          'AI is currently busy. Please try again later.'
+          'AI is busy right now. Please try again later.'
       });
 
     }
@@ -46,7 +44,6 @@ export default async function handler(req, res) {
 
     const lastRequest = userCooldowns.get(ip);
 
-    // Cooldown protection
     if (lastRequest && now - lastRequest < 4000) {
 
       return res.status(429).json({
@@ -58,33 +55,55 @@ export default async function handler(req, res) {
 
     userCooldowns.set(ip, now);
 
-    // Auto cleanup old IPs
     setTimeout(() => {
       userCooldowns.delete(ip);
     }, 10000);
 
-    const { message } = req.body;
+    const { messages } = req.body;
 
-    // Prevent empty spam
-    if (!message || !message.trim()) {
-
-      return res.status(400).json({
-        reply: 'Please type a message.'
-      });
-
-    }
-
-    // Prevent huge prompts
-    if (message.length > 2000) {
+    if (!messages || !Array.isArray(messages)) {
 
       return res.status(400).json({
-        reply:
-          'Message is too long. Please shorten it.'
+        reply: 'Invalid messages.'
       });
 
     }
 
     dailyUsage.count++;
+
+    const contents = [
+      {
+        role: 'user',
+        parts: [
+          {
+            text: `
+You are a smart modern AI assistant.
+
+Rules:
+- Behave naturally
+- Continue conversations naturally
+- Remember previous chat messages in this conversation
+- Never say you forgot context
+- Never say you cannot remember
+- Be conversational like ChatGPT
+- Never mention Gemini or Google AI
+`
+          }
+        ]
+      },
+
+      ...messages.map((msg) => ({
+        role: msg.role === 'assistant'
+          ? 'model'
+          : 'user',
+
+        parts: [
+          {
+            text: msg.text
+          }
+        ]
+      }))
+    ];
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
@@ -97,35 +116,7 @@ export default async function handler(req, res) {
 
         body: JSON.stringify({
 
-          contents: [
-            {
-              role: 'user',
-
-              parts: [
-                {
-                  text: `
-You are a smart modern AI assistant.
-
-Behave naturally like ChatGPT.
-
-Rules:
-- Be conversational
-- Be intelligent
-- Be friendly
-- Give useful replies
-- Use markdown formatting
-- Never mention Gemini
-- Never mention Google AI
-- Never mention APIs
-- Sound natural
-
-User:
-${message}
-`
-                }
-              ]
-            }
-          ],
+          contents,
 
           generationConfig: {
             temperature: 0.9,
