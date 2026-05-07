@@ -10,18 +10,19 @@ export default function AI() {
   const [messages, setMessages] = useState<any[]>([
     {
       role: 'assistant',
-      text:
-        'Hello 👋  
-How can I help you today?'
+      text: `Hello 👋
+How can I help you today?`
     }
   ]);
 
   const bottomRef = useRef<any>(null);
 
   useEffect(() => {
+
     bottomRef.current?.scrollIntoView({
       behavior: 'smooth'
     });
+
   }, [messages]);
 
   const sendMessage = async () => {
@@ -45,13 +46,17 @@ How can I help you today?'
     try {
 
       const response = await fetch('/api/ai', {
+
         method: 'POST',
+
         headers: {
           'Content-Type': 'application/json'
         },
+
         body: JSON.stringify({
           message: currentMessage
         })
+
       });
 
       const data = await response.json();
@@ -77,18 +82,23 @@ How can I help you today?'
     }
 
     setLoading(false);
+
   };
 
   const handleKeyDown = (e: any) => {
 
     if (e.key === 'Enter' && !e.shiftKey) {
+
       e.preventDefault();
+
       sendMessage();
+
     }
 
   };
 
   return (
+
     <div className="h-screen bg-white dark:bg-black flex flex-col">
 
       {/* Header */}
@@ -105,7 +115,7 @@ How can I help you today?'
           <div>
 
             <h1 className="font-bold text-gray-900 dark:text-white text-lg">
-              Toolbox AI
+              AI Assistant
             </h1>
 
             <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -154,7 +164,7 @@ How can I help you today?'
 
               <div className="bg-gray-100 dark:bg-zinc-900 px-5 py-4 rounded-3xl text-gray-700 dark:text-gray-300 animate-pulse">
 
-                Toolbox AI is thinking...
+                Thinking...
 
               </div>
 
@@ -176,12 +186,12 @@ How can I help you today?'
           <div className="flex items-end gap-3 bg-gray-100 dark:bg-zinc-900 rounded-3xl px-4 py-3 border border-gray-200 dark:border-zinc-800">
 
             <textarea
-              placeholder="Message Toolbox AI..."
+              placeholder="Message AI Assistant..."
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyDown}
-              rows={1}
-              className="flex-1 bg-transparent resize-none outline-none text-gray-900 dark:text-white max-h-40 text-[15px]"
+              rows={2}
+              className="flex-1 bg-transparent resize-none outline-none text-gray-900 dark:text-white max-h-40 min-h-[48px] text-[15px]"
             />
 
             <button
@@ -201,5 +211,6 @@ How can I help you today?'
       </div>
 
     </div>
+
   );
 }
