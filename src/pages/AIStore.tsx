@@ -65,7 +65,7 @@ export default function AIStore() {
         alert(data.error);
       }
     } catch (e) { 
-      alert("Nexus connection lost. Check your API key or internet."); 
+      alert("connection lost. Check your API key or internet."); 
     }
     setLoading(false);
   };
@@ -83,7 +83,7 @@ export default function AIStore() {
         <div className="w-20 h-20 bg-blue-600 rounded-[30px] flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-600/20">
           <Sparkles className="text-white" size={32} />
         </div>
-        <h1 className="text-4xl font-black text-white mb-2 tracking-tighter uppercase italic">Nexus AI</h1>
+        <h1 className="text-4xl font-black text-white mb-2 tracking-tighter uppercase italic">AI Store</h1>
         <p className="text-zinc-500 mb-8 font-medium">Log in to access premium generation styles.</p>
         <button onClick={() => supabase.auth.signInWithOAuth({ provider: 'google' })} 
           className="w-full bg-white text-black py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:scale-105 transition-all">
@@ -216,7 +216,7 @@ export default function AIStore() {
       {storeItems.length === 0 && (
         <div className="py-40 text-center text-zinc-600">
           <Loader2 className="mx-auto animate-spin mb-4" />
-          <p className="font-medium">Syncing with Nexus Store...</p>
+          <p className="font-medium">Syncing with AI Store...</p>
         </div>
       )}
     </div>
