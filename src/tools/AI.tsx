@@ -11,7 +11,7 @@ export default function AI() {
     {
       role: 'assistant',
       text:
-        'Hello 👋 I am Toolbox AI. Ask me anything, or ask for tools like image to pdf, QR generator, background remover and more.'
+        'Hello 👋 Ask me anything. I can help with questions, ideas, coding, tools, writing and more.'
     }
   ]);
 
@@ -108,7 +108,7 @@ export default function AI() {
             </h1>
 
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Powered by Gemini AI
+              Smart AI Assistant
             </p>
 
           </div>
