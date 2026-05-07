@@ -1,140 +1,204 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Send, Sparkles, ImageIcon, Video, MessageSquare, User, Bot, Loader2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Send, Sparkles } from 'lucide-react';
 
-export default function AgenticAI() {
-  const [prompt, setPrompt] = useState('');
-  const [messages, setMessages] = useState<any[]>([]);
-  const [mode, setMode] = useState<'chat' | 'image' | 'video'>('chat');
+export default function AI() {
+
+  const [message, setMessage] = useState('');
+
   const [loading, setLoading] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom
+  const [messages, setMessages] = useState<any[]>([
+    {
+      role: 'assistant',
+      text:
+        'Hello 👋 I am Toolbox AI. Ask me anything, or ask for tools like image to pdf, QR generator, background remover and more.'
+    }
+  ]);
+
+  const bottomRef = useRef<any>(null);
+
   useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-  }, [messages, loading]);
+    bottomRef.current?.scrollIntoView({
+      behavior: 'smooth'
+    });
+  }, [messages]);
 
-  const handleSend = async () => {
-    if (!prompt.trim() || loading) return;
+  const sendMessage = async () => {
 
-    const userMsg = { role: 'user', content: prompt, type: 'text' };
-    setMessages(prev => [...prev, userMsg]);
+    if (!message.trim()) return;
+
+    const currentMessage = message;
+
+    setMessages(prev => [
+      ...prev,
+      {
+        role: 'user',
+        text: currentMessage
+      }
+    ]);
+
+    setMessage('');
+
     setLoading(true);
-    setPrompt('');
 
     try {
-      const res = await fetch('/api/agent', {
+
+      const response = await fetch('/api/ai', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: userMsg.content, mode }),
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: currentMessage
+        })
       });
 
-      const data = await res.json();
-      
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: data.data || data.text || data.error, 
-        type: data.type || 'text' 
-      }]);
-    } catch (err) {
-      setMessages(prev => [...prev, { role: 'assistant', content: "I encountered a connection error. Please try again.", type: 'text' }]);
-    } finally {
-      setLoading(false);
+      const data = await response.json();
+
+      setMessages(prev => [
+        ...prev,
+        {
+          role: 'assistant',
+          text: data.reply
+        }
+      ]);
+
+    } catch (error) {
+
+      setMessages(prev => [
+        ...prev,
+        {
+          role: 'assistant',
+          text: 'Something went wrong.'
+        }
+      ]);
+
     }
+
+    setLoading(false);
+  };
+
+  const handleKeyDown = (e: any) => {
+
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+
   };
 
   return (
-    <div className="flex flex-col h-screen bg-[#050505] text-zinc-200 font-sans">
+    <div className="h-screen bg-white dark:bg-black flex flex-col">
+
       {/* Header */}
-      <header className="p-4 border-b border-white/5 flex justify-between items-center bg-black/50 backdrop-blur-md">
-        <div className="flex items-center gap-2 px-4">
-          <div className="bg-blue-600 p-1.5 rounded-lg">
-            <Sparkles size={18} className="text-white" />
-          </div>
-          <h1 className="font-semibold tracking-tight text-white">Nexus Intelligence</h1>
-        </div>
-      </header>
+      <div className="border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-black sticky top-0 z-50">
 
-      {/* Chat Area */}
-      <div className="flex-grow overflow-y-auto" ref={scrollRef}>
-        <div className="max-w-3xl mx-auto py-10 px-6 space-y-8">
-          {messages.length === 0 && (
-            <div className="h-[40vh] flex flex-col items-center justify-center text-center space-y-4">
-              <Bot size={48} className="text-zinc-700 animate-pulse" />
-              <h2 className="text-2xl font-medium text-zinc-400">How can I help you today?</h2>
-            </div>
-          )}
-          
-          {messages.map((m, i) => (
-            <div key={i} className={`flex gap-4 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`flex max-w-[85%] gap-4 ${m.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${m.role === 'user' ? 'bg-zinc-700' : 'bg-blue-600'}`}>
-                  {m.role === 'user' ? <User size={16} /> : <Sparkles size={16} />}
-                </div>
-                <div className={`p-4 rounded-2xl leading-relaxed text-[15px] ${m.role === 'user' ? 'bg-zinc-800 text-white' : 'bg-transparent border border-white/10 text-zinc-300'}`}>
-                  {m.type === 'image' && <img src={m.content} className="rounded-lg mb-2 shadow-2xl max-w-full" alt="AI Gen" />}
-                  {m.type === 'video' && <video src={m.content} controls className="rounded-lg mb-2 w-full shadow-2xl" />}
-                  <p>{m.content}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-          
-          {loading && (
-            <div className="flex gap-4 items-center pl-2">
-              <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
-                <Loader2 size={16} className="animate-spin text-white" />
-              </div>
-              <p className="text-sm text-zinc-500 animate-pulse font-medium">Nexus is thinking...</p>
-            </div>
-          )}
+        <div className="max-w-5xl mx-auto px-4 py-4 flex items-center gap-3">
+
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg">
+
+            <Sparkles className="text-white w-5 h-5" />
+
+          </div>
+
+          <div>
+
+            <h1 className="font-bold text-gray-900 dark:text-white text-lg">
+              Toolbox AI
+            </h1>
+
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Powered by Gemini AI
+            </p>
+
+          </div>
+
         </div>
+
       </div>
 
-      {/* Input Dock */}
-      <div className="p-4 pb-8 bg-gradient-to-t from-black to-transparent">
-        <div className="max-w-3xl mx-auto relative bg-zinc-900 border border-white/10 rounded-[28px] shadow-2xl overflow-hidden">
-          {/* Mode Selector */}
-          <div className="flex gap-1 p-2 bg-black/20 border-b border-white/5">
-            {[
-              { id: 'chat', icon: <MessageSquare size={14} />, label: 'Chat' },
-              { id: 'image', icon: <ImageIcon size={14} />, label: 'Image' },
-              { id: 'video', icon: <Video size={14} />, label: 'Video' }
-            ].map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setMode(t.id as any)}
-                className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all ${mode === t.id ? 'bg-zinc-100 text-black' : 'text-zinc-500 hover:text-zinc-300'}`}
-              >
-                {t.icon} {t.label}
-              </button>
-            ))}
-          </div>
+      {/* Chat */}
+      <div className="flex-1 overflow-y-auto">
 
-          <div className="flex items-center gap-2 p-3">
-            <textarea
-              rows={1}
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSend();
-                }
-              }}
-              placeholder={`Message Nexus (${mode} mode)...`}
-              className="flex-grow bg-transparent p-2 outline-none text-sm resize-none"
-            />
-            <button
-              onClick={handleSend}
-              disabled={loading || !prompt.trim()}
-              className="bg-zinc-100 text-black p-2.5 rounded-full hover:bg-white transition-all disabled:opacity-20"
+        <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+
+          {messages.map((msg, index) => (
+
+            <div
+              key={index}
+              className={`flex ${
+                msg.role === 'user'
+                  ? 'justify-end'
+                  : 'justify-start'
+              }`}
             >
-              <Send size={18} />
-            </button>
-          </div>
+
+              <div
+                className={`max-w-[85%] rounded-3xl px-5 py-4 whitespace-pre-wrap leading-7 text-[15px] shadow-sm ${
+                  msg.role === 'user'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 dark:bg-zinc-900 text-gray-900 dark:text-white'
+                }`}
+              >
+                {msg.text}
+              </div>
+
+            </div>
+
+          ))}
+
+          {loading && (
+
+            <div className="flex justify-start">
+
+              <div className="bg-gray-100 dark:bg-zinc-900 px-5 py-4 rounded-3xl text-gray-700 dark:text-gray-300 animate-pulse">
+
+                Toolbox AI is thinking...
+
+              </div>
+
+            </div>
+
+          )}
+
+          <div ref={bottomRef}></div>
+
         </div>
-        <p className="text-center text-[10px] text-zinc-600 mt-3 font-medium uppercase tracking-[0.2em]">Powered by Nexus v11.0</p>
+
       </div>
+
+      {/* Input */}
+      <div className="border-t border-gray-200 dark:border-zinc-800 bg-white dark:bg-black">
+
+        <div className="max-w-4xl mx-auto p-4">
+
+          <div className="flex items-end gap-3 bg-gray-100 dark:bg-zinc-900 rounded-3xl px-4 py-3 border border-gray-200 dark:border-zinc-800">
+
+            <textarea
+              placeholder="Message Toolbox AI..."
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={handleKeyDown}
+              rows={1}
+              className="flex-1 bg-transparent resize-none outline-none text-gray-900 dark:text-white max-h-40 text-[15px]"
+            />
+
+            <button
+              onClick={sendMessage}
+              disabled={loading}
+              className="w-12 h-12 rounded-2xl bg-blue-600 hover:bg-blue-700 transition-all flex items-center justify-center text-white shrink-0 disabled:opacity-50"
+            >
+
+              <Send className="w-5 h-5" />
+
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
     </div>
   );
 }
