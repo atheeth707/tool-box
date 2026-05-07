@@ -11,7 +11,7 @@ export default function Admin() {
   const [authLoading, setAuthLoading] = useState(true);
 
   // CHANGE THIS TO YOUR GOOGLE EMAIL
-  const ADMIN_EMAIL = "your-email@gmail.com"; 
+  const ADMIN_EMAIL = "atheeth707@gmail.com"; 
 
   useEffect(() => {
     checkUser();
