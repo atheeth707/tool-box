@@ -1,16 +1,14 @@
-
-import AgenticAI from './AgenticAI';
-import AIFaceSwap from './AIFaceSwap';
-import AISpeechGenerator from './AISpeechGenerator';
-import Textbooks2 from './Textbooks2';
-import Textbooks1 from './Textbooks1';
-import Textbooks from './Textbooks';
-import MediaClips from './MediaClips';
-import AudioDownload from './AudioDownload';
-import AIChatbot from './AIChatbot';
-import UserReport from './UserReport';
-import AIImageGenerator from './AIImageGenerator';
-import InstagramCaptionGenerator from './InstagramCaptionGenerator';
+import AIFaceSwap from './AIFaceSwap'
+import AISpeechGenerator from './AISpeechGenerator'
+import Textbooks2 from './Textbooks2'
+import Textbooks1 from './Textbooks1'
+import Textbooks from './Textbooks'
+import MediaClips from './MediaClips'
+import AudioDownload from './AudioDownload'
+import AIChatbot from './AIChatbot'
+import UserReport from './UserReport'
+import AIImageGenerator from './AIImageGenerator'
+import InstagramCaptionGenerator from './InstagramCaptionGenerator'
 import AIContentTools from './AIContentTools'
 import AIVideoTools from './AIVideoTools';
 import AIWebsiteTools from './AIWebsiteTools';
@@ -318,8 +316,6 @@ export const ToolComponents: Record<string, React.FC> = {
 '10thbooks': Textbooks2,
 'ai-speech-generator': AISpeechGenerator,
 'ai-faceswap': AIFaceSwap,
-'agentic-ai': AgenticAI,
-
 };
 
 export const getToolComponent = (id: string) => {
