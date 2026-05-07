@@ -11,19 +11,13 @@ export default async function handler(req, res) {
   const { imageBase64, userId, masterPrompt } = req.body;
 
   try {
-    // 1. Check Profile & Credits
-    const { data: profile, error: pError } = await supabase
-      .from('profiles')
-      .select('credits')
-      .eq('id', userId)
-      .single();
+    // 1. Database Credit Check
+    const { data: profile } = await supabase.from('profiles').select('credits').eq('id', userId).single();
+    if (!profile || profile.credits < 1) return res.status(402).json({ error: "Out of credits." });
 
-    if (pError || !profile) return res.status(404).json({ error: "Profile not found." });
-    if (profile.credits < 1) return res.status(402).json({ error: "Out of credits." });
-
-    // 2. Nano Banana (Gemini 2.5 Flash Image) API Call
-    // Model ID: gemini-2.5-flash-image
-    const MODEL_ID = "gemini-2.5-flash-image";
+    // 2. Try Gemini 3.1 Flash Image (Better Quota usually)
+    // If this fails, we can fallback to 2.5
+    const MODEL_ID = "gemini-3.1-flash-image"; 
     const GOOGLE_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_ID}:generateContent?key=${process.env.GEMINI_API_KEY}`;
 
     const response = await fetch(GOOGLE_API_URL, {
@@ -33,55 +27,37 @@ export default async function handler(req, res) {
         contents: [{
           parts: [
             { text: masterPrompt },
-            {
-              inline_data: {
-                mime_type: "image/png",
-                data: imageBase64 // This is the user's uploaded image
-              }
-            }
+            { inline_data: { mime_type: "image/png", data: imageBase64 } }
           ]
         }],
-        generationConfig: {
-          // Tell the model we want an IMAGE back, not just text
-          response_modalities: ["IMAGE"] 
-        }
+        generationConfig: { response_modalities: ["IMAGE"] }
       })
     });
 
     const resultData = await response.json();
 
+    // 3. Handle Quota Error specifically
     if (!response.ok) {
-      console.error("Nano Banana Error:", resultData);
-      return res.status(response.status).json({ 
-        error: resultData.error?.message || "Nano Banana Engine is currently busy." 
-      });
+      if (resultData.error?.message?.includes("quota") || response.status === 429) {
+        return res.status(429).json({ 
+          error: "Nexus Free Tier is full. Try again in 60 seconds." 
+        });
+      }
+      return res.status(response.status).json({ error: "AI Engine busy. Try again." });
     }
 
-    // 3. Extract the image from the multimodal response
-    // Nano Banana returns the image inside the candidates array
+    // 4. Success - Extract Image
     const imagePart = resultData.candidates?.[0]?.content?.parts?.find(p => p.inline_data);
-    
-    if (!imagePart) {
-      return res.status(500).json({ error: "AI processed the request but didn't return an image." });
-    }
+    if (!imagePart) return res.status(500).json({ error: "AI did not return an image." });
 
     const finalImage = `data:image/png;base64,${imagePart.inline_data.data}`;
 
-    // 4. Deduct Credit
-    const { data: updated } = await supabase
-      .from('profiles')
-      .update({ credits: profile.credits - 1 })
-      .eq('id', userId)
-      .select('credits')
-      .single();
+    // 5. Update Database
+    const { data: updated } = await supabase.from('profiles').update({ credits: profile.credits - 1 }).eq('id', userId).select('credits').single();
 
-    return res.status(200).json({
-      output: finalImage,
-      newCredits: updated ? updated.credits : profile.credits - 1
-    });
+    return res.status(200).json({ output: finalImage, newCredits: updated?.credits });
 
   } catch (err) {
-    console.error("Critical Nano Banana Error:", err);
-    return res.status(500).json({ error: "Neural Engine Offline." });
+    return res.status(500).json({ error: "Connection error." });
   }
 }
