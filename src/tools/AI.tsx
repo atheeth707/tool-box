@@ -1,5 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { Send, Sparkles } from 'lucide-react';
+import {
+  Send,
+  Sparkles,
+  Mic,
+  Square,
+  Volume2
+} from 'lucide-react';
 
 export default function AI() {
 
@@ -7,15 +13,21 @@ export default function AI() {
 
   const [loading, setLoading] = useState(false);
 
-  const [messages, setMessages] = useState<any[]>([
+  const [listening, setListening] = useState(false);
+
+  const [speaking, setSpeaking] = useState(false);
+
+  const [messages, setMessages] = useState<any[]>(([
     {
       role: 'assistant',
       text: `Hello 👋
 How can I help you today?`
     }
-  ]);
+  ]));
 
   const bottomRef = useRef<any>(null);
+
+  const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
 
@@ -24,6 +36,92 @@ How can I help you today?`
     });
 
   }, [messages]);
+
+  // Voice Recognition
+  const startListening = () => {
+
+    const SpeechRecognition =
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+
+      alert('Voice recognition not supported.');
+
+      return;
+
+    }
+
+    const recognition = new SpeechRecognition();
+
+    recognition.lang = 'en-US';
+
+    recognition.continuous = false;
+
+    recognition.interimResults = false;
+
+    recognition.onstart = () => {
+      setListening(true);
+    };
+
+    recognition.onend = () => {
+      setListening(false);
+    };
+
+    recognition.onresult = (event: any) => {
+
+      const transcript =
+        event.results[0][0].transcript;
+
+      setMessage(transcript);
+
+    };
+
+    recognition.start();
+
+    recognitionRef.current = recognition;
+
+  };
+
+  const stopListening = () => {
+
+    recognitionRef.current?.stop();
+
+    setListening(false);
+
+  };
+
+  // Speak AI response
+  const speakText = (text: string) => {
+
+    window.speechSynthesis.cancel();
+
+    const utterance =
+      new SpeechSynthesisUtterance(text);
+
+    utterance.rate = 1;
+
+    utterance.pitch = 1;
+
+    utterance.onstart = () => {
+      setSpeaking(true);
+    };
+
+    utterance.onend = () => {
+      setSpeaking(false);
+    };
+
+    speechSynthesis.speak(utterance);
+
+  };
+
+  const stopSpeaking = () => {
+
+    speechSynthesis.cancel();
+
+    setSpeaking(false);
+
+  };
 
   const sendMessage = async () => {
 
@@ -53,27 +151,34 @@ How can I help you today?`
           'Content-Type': 'application/json'
         },
 
-       body: JSON.stringify({
-messages: [
-  ...messages.slice(-50),
-    {
-      role: 'user',
-      text: currentMessage
-    }
-  ]
-})
+        body: JSON.stringify({
+
+          messages: [
+            ...messages.slice(-12),
+            {
+              role: 'user',
+              text: currentMessage
+            }
+          ]
+
+        })
 
       });
 
       const data = await response.json();
 
+      const aiReply =
+        data.reply || 'Please try again.';
+
       setMessages(prev => [
         ...prev,
         {
           role: 'assistant',
-          text: data.reply
+          text: aiReply
         }
       ]);
+
+      speakText(aiReply);
 
     } catch (error) {
 
@@ -110,25 +215,42 @@ messages: [
       {/* Header */}
       <div className="border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-black sticky top-0 z-50">
 
-        <div className="max-w-5xl mx-auto px-4 py-4 flex items-center gap-3">
+        <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
 
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg">
+          <div className="flex items-center gap-3">
 
-            <Sparkles className="text-white w-5 h-5" />
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg">
+
+              <Sparkles className="text-white w-5 h-5" />
+
+            </div>
+
+            <div>
+
+              <h1 className="font-bold text-gray-900 dark:text-white text-lg">
+                AI Assistant
+              </h1>
+
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Smart AI Assistant
+              </p>
+
+            </div>
 
           </div>
 
-          <div>
+          {speaking && (
 
-            <h1 className="font-bold text-gray-900 dark:text-white text-lg">
-              AI Assistant
-            </h1>
+            <button
+              onClick={stopSpeaking}
+              className="text-red-500"
+            >
 
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Smart AI Assistant
-            </p>
+              <Square className="w-5 h-5" />
 
-          </div>
+            </button>
+
+          )}
 
         </div>
 
@@ -157,7 +279,22 @@ messages: [
                     : 'bg-gray-100 dark:bg-zinc-900 text-gray-900 dark:text-white'
                 }`}
               >
+
                 {msg.text}
+
+                {msg.role === 'assistant' && (
+
+                  <button
+                    onClick={() => speakText(msg.text)}
+                    className="mt-3 opacity-70 hover:opacity-100"
+                  >
+
+                    <Volume2 className="w-4 h-4" />
+
+                  </button>
+
+                )}
+
               </div>
 
             </div>
@@ -199,6 +336,30 @@ messages: [
               rows={2}
               className="flex-1 bg-transparent resize-none outline-none text-gray-900 dark:text-white max-h-40 min-h-[48px] text-[15px]"
             />
+
+            {listening ? (
+
+              <button
+                onClick={stopListening}
+                className="w-12 h-12 rounded-2xl bg-red-500 text-white flex items-center justify-center"
+              >
+
+                <Square className="w-5 h-5" />
+
+              </button>
+
+            ) : (
+
+              <button
+                onClick={startListening}
+                className="w-12 h-12 rounded-2xl bg-gray-300 dark:bg-zinc-700 flex items-center justify-center"
+              >
+
+                <Mic className="w-5 h-5" />
+
+              </button>
+
+            )}
 
             <button
               onClick={sendMessage}
