@@ -4,7 +4,7 @@ import Layout from './components/Layout';
 import Home from './pages/Home';
 import Category from './pages/Category';
 import ToolPage from './pages/ToolPage';
-import AI from './pages/AI';
+import AI from './tools/AI';
 
 function App() {
   return (
