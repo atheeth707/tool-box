@@ -1,31 +1,22 @@
 import { supabase } from './supabase';
 
-export async function createProfile(user: any) {
+export const createProfile = async (user: any) => {
+  if (!user) return;
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('profiles')
-    .select('*')
+    .select('id')
     .eq('id', user.id)
     .single();
 
-  if (data) return;
-
-  await supabase
-    .from('profiles')
-    .insert({
-
-      id: user.id,
-
-      name:
-        user.user_metadata?.full_name || '',
-
-      email: user.email,
-
-      avatar_url:
-        user.user_metadata?.avatar_url || '',
-
-      credits: 10
-
-    });
-
-}
+  if (!data && !error) {
+    // Profile doesn't exist, create it with 10 free credits
+    await supabase.from('profiles').insert([
+      { 
+        id: user.id, 
+        email: user.email, 
+        credits: 10 
+      }
+    ]);
+  }
+};
