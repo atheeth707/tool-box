@@ -11,7 +11,7 @@ export default async function handler(req, res) {
   const { imageBase64, userId, masterPrompt } = req.body;
 
   try {
-    // 1. Credit Check
+    // 1. Check Profile & Credits
     const { data: profile, error: pError } = await supabase
       .from('profiles')
       .select('credits')
@@ -21,10 +21,10 @@ export default async function handler(req, res) {
     if (pError || !profile) return res.status(404).json({ error: "Profile not found." });
     if (profile.credits < 1) return res.status(402).json({ error: "Out of credits." });
 
-    // 2. Updated Google Gemini Image API Call
-    // Using the 3.1 Flash Image model name (Nano Banana 2)
-    const MODEL_NAME = "gemini-3.1-flash-image"; 
-    const GOOGLE_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${process.env.GEMINI_API_KEY}`;
+    // 2. Nano Banana (Gemini 2.5 Flash Image) API Call
+    // Model ID: gemini-2.5-flash-image
+    const MODEL_ID = "gemini-2.5-flash-image";
+    const GOOGLE_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_ID}:generateContent?key=${process.env.GEMINI_API_KEY}`;
 
     const response = await fetch(GOOGLE_API_URL, {
       method: "POST",
@@ -36,14 +36,14 @@ export default async function handler(req, res) {
             {
               inline_data: {
                 mime_type: "image/png",
-                data: imageBase64 // The source image for Image-to-Image
+                data: imageBase64 // This is the user's uploaded image
               }
             }
           ]
         }],
         generationConfig: {
-          sampleCount: 1,
-          candidateCount: 1
+          // Tell the model we want an IMAGE back, not just text
+          response_modalities: ["IMAGE"] 
         }
       })
     });
@@ -51,21 +51,21 @@ export default async function handler(req, res) {
     const resultData = await response.json();
 
     if (!response.ok) {
-      console.error("Google API Error:", resultData);
+      console.error("Nano Banana Error:", resultData);
       return res.status(response.status).json({ 
-        error: "Engine compatibility error. Check model name in AI Studio." 
+        error: resultData.error?.message || "Nano Banana Engine is currently busy." 
       });
     }
 
-    // 3. Extract the Generated Image
-    // Gemini 3.1 Flash Image returns the file in the candidates[0].content.parts
-    const generatedPart = resultData.candidates[0].content.parts.find(p => p.inline_data);
+    // 3. Extract the image from the multimodal response
+    // Nano Banana returns the image inside the candidates array
+    const imagePart = resultData.candidates?.[0]?.content?.parts?.find(p => p.inline_data);
     
-    if (!generatedPart) {
-       return res.status(500).json({ error: "AI failed to return an image." });
+    if (!imagePart) {
+      return res.status(500).json({ error: "AI processed the request but didn't return an image." });
     }
 
-    const finalImage = `data:image/png;base64,${generatedPart.inline_data.data}`;
+    const finalImage = `data:image/png;base64,${imagePart.inline_data.data}`;
 
     // 4. Deduct Credit
     const { data: updated } = await supabase
@@ -81,7 +81,7 @@ export default async function handler(req, res) {
     });
 
   } catch (err) {
-    console.error("Critical Backend Error:", err);
+    console.error("Critical Nano Banana Error:", err);
     return res.status(500).json({ error: "Neural Engine Offline." });
   }
 }
