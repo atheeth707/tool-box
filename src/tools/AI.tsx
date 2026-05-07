@@ -1,132 +1,185 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Sparkles, Send } from 'lucide-react';
 
 export default function AI() {
-  const [message, setMessage] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [reply, setReply] = useState('');
-  const [tool, setTool] = useState<any>(null);
 
-  const askAI = async () => {
+  const [message, setMessage] = useState('');
+
+  const [loading, setLoading] = useState(false);
+
+  const [messages, setMessages] = useState<any[]>([
+    {
+      role: 'assistant',
+      text:
+        'Hello 👋 I am Toolbox AI. Ask me anything or ask for tools like image to pdf, QR generator, background remover and more.'
+    }
+  ]);
+
+  const sendMessage = async () => {
+
     if (!message.trim()) return;
 
+    const userMessage = {
+      role: 'user',
+      text: message
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+
+    const currentMessage = message;
+
+    setMessage('');
+
     setLoading(true);
-    setReply('');
-    setTool(null);
 
     try {
+
       const response = await fetch('/api/ai', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          message
+          message: currentMessage
         })
       });
 
       const data = await response.json();
 
-      setReply(data.reply);
-      setTool(data.tool);
+      setMessages(prev => [
+        ...prev,
+        {
+          role: 'assistant',
+          text: data.reply
+        }
+      ]);
 
     } catch (error) {
-      setReply('Something went wrong.');
+
+      setMessages(prev => [
+        ...prev,
+        {
+          role: 'assistant',
+          text: 'Something went wrong.'
+        }
+      ]);
+
     }
 
     setLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black px-4 py-10">
+    <div className="min-h-screen bg-white dark:bg-black flex flex-col">
 
       {/* SEO */}
-      <title>AI Tool Assistant - Free AI Tool Finder</title>
+      <title>Toolbox AI Chat Assistant</title>
+
       <meta
         name="description"
-        content="Ask AI to find the best free online tools instantly."
+        content="Chat with Toolbox AI assistant powered by Google Gemini AI."
       />
 
-      <div className="max-w-4xl mx-auto">
+      {/* Header */}
+      <div className="border-b border-gray-200 dark:border-zinc-800 bg-white/90 dark:bg-black/90 backdrop-blur sticky top-0 z-20">
 
-        <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
-            AI Tool Assistant
-          </h1>
+        <div className="max-w-5xl mx-auto px-4 py-4 flex items-center gap-3">
 
-          <p className="mt-4 text-gray-600 dark:text-gray-400">
-            Ask anything like image to pdf, background remover,
-            image compressor and more.
-          </p>
-        </div>
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center">
 
-        <div className="bg-gray-100 dark:bg-zinc-900 rounded-3xl p-6 shadow-xl border border-gray-200 dark:border-zinc-800">
-
-          <div className="flex flex-col md:flex-row gap-3">
-
-            <input
-              type="text"
-              placeholder="Ask AI for any tool..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              className="flex-1 px-5 py-4 rounded-2xl bg-white dark:bg-zinc-800 border border-gray-300 dark:border-zinc-700 text-black dark:text-white outline-none"
-            />
-
-            <button
-              onClick={askAI}
-              className="px-6 py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-all"
-            >
-              Ask AI
-            </button>
+            <Sparkles className="text-white w-5 h-5" />
 
           </div>
 
+          <div>
+
+            <h1 className="font-bold text-gray-900 dark:text-white">
+              Toolbox AI
+            </h1>
+
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Powered by Gemini AI
+            </p>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* Chat Area */}
+      <div className="flex-1 overflow-y-auto">
+
+        <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+
+          {messages.map((msg, index) => (
+
+            <div
+              key={index}
+              className={`flex ${
+                msg.role === 'user'
+                  ? 'justify-end'
+                  : 'justify-start'
+              }`}
+            >
+
+              <div
+                className={`max-w-[85%] rounded-3xl px-5 py-4 whitespace-pre-line leading-7 shadow-sm ${
+                  msg.role === 'user'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 dark:bg-zinc-900 text-gray-900 dark:text-white'
+                }`}
+              >
+                {msg.text}
+              </div>
+
+            </div>
+
+          ))}
+
           {loading && (
-            <div className="mt-6 bg-white dark:bg-zinc-800 rounded-2xl p-5">
-              <p className="text-gray-600 dark:text-gray-300">
-                AI is thinking...
-              </p>
-            </div>
-          )}
 
-          {reply && (
-            <div className="mt-6 bg-white dark:bg-zinc-800 rounded-2xl p-6 border border-gray-200 dark:border-zinc-700">
+            <div className="flex justify-start">
 
-              <h2 className="text-xl font-semibold text-black dark:text-white mb-4">
-                AI Response
-              </h2>
+              <div className="bg-gray-100 dark:bg-zinc-900 px-5 py-4 rounded-3xl text-gray-600 dark:text-gray-300">
 
-              <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line leading-7">
-                {reply}
-              </p>
+                Toolbox AI is thinking...
 
-              {tool && (
-                <div className="mt-6">
-
-                  <div className="p-5 rounded-2xl bg-blue-50 dark:bg-zinc-900 border border-blue-100 dark:border-zinc-700">
-
-                    <h3 className="text-xl font-bold text-black dark:text-white">
-                      {tool.title}
-                    </h3>
-
-                    <p className="mt-2 text-gray-600 dark:text-gray-400">
-                      {tool.description}
-                    </p>
-
-                    <Link
-                      to={tool.url}
-                      className="inline-block mt-5 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-all"
-                    >
-                      Open Tool
-                    </Link>
-
-                  </div>
-
-                </div>
-              )}
+              </div>
 
             </div>
+
           )}
+
+        </div>
+
+      </div>
+
+      {/* Input */}
+      <div className="border-t border-gray-200 dark:border-zinc-800 bg-white dark:bg-black sticky bottom-0">
+
+        <div className="max-w-4xl mx-auto p-4">
+
+          <div className="flex items-end gap-3 bg-gray-100 dark:bg-zinc-900 rounded-3xl p-3">
+
+            <textarea
+              placeholder="Message Toolbox AI..."
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              rows={1}
+              className="flex-1 bg-transparent resize-none outline-none text-gray-900 dark:text-white max-h-40"
+            />
+
+            <button
+              onClick={sendMessage}
+              className="w-12 h-12 rounded-2xl bg-blue-600 hover:bg-blue-700 transition-all flex items-center justify-center text-white shrink-0"
+            >
+
+              <Send className="w-5 h-5" />
+
+            </button>
+
+          </div>
 
         </div>
 

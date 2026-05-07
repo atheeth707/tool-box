@@ -8,14 +8,84 @@ export default async function handler(req, res) {
   try {
     const { message } = req.body;
 
+    const lower = message.toLowerCase();
+
+    let toolSuggestion = '';
+
+    if (
+      lower.includes('image to pdf') ||
+      lower.includes('jpg to pdf') ||
+      lower.includes('png to pdf')
+    ) {
+      toolSuggestion = `
+You can use our Image To PDF tool here:
+https://tool-box-free.vercel.app/tool/image-to-pdf
+`;
+    }
+
+    else if (
+      lower.includes('remove background') ||
+      lower.includes('background remover') ||
+      lower.includes('bg remover')
+    ) {
+      toolSuggestion = `
+You can use our Background Remover tool here:
+https://tool-box-free.vercel.app/tool/background-remover
+`;
+    }
+
+    else if (
+      lower.includes('compress image') ||
+      lower.includes('reduce image size')
+    ) {
+      toolSuggestion = `
+You can use our Image Compressor tool here:
+https://tool-box-free.vercel.app/tool/image-compressor
+`;
+    }
+
+    else if (
+      lower.includes('qr') ||
+      lower.includes('qr code')
+    ) {
+      toolSuggestion = `
+You can use our QR Generator tool here:
+https://tool-box-free.vercel.app/tool/qr-generator
+`;
+    }
+
+    else if (
+      lower.includes('youtube thumbnail')
+    ) {
+      toolSuggestion = `
+You can use our YouTube Thumbnail Downloader here:
+https://tool-box-free.vercel.app/tool/youtube-thumbnail-downloader
+`;
+    }
+
     const prompt = `
-You are ToolBox AI Assistant.
+You are Toolbox AI.
 
-You help users find the correct online tool.
+You are a modern AI assistant similar to ChatGPT and Gemini.
 
-Reply short, friendly, and SEO friendly.
+Behave like a real helpful AI assistant.
 
-User request:
+Rules:
+- Always answer naturally
+- Be friendly
+- Give detailed helpful answers
+- Never say "I could not understand"
+- If user asks tool related questions, recommend website tools
+- If user asks normal questions, answer normally
+- Make responses modern and smart
+
+Website:
+https://tool-box-free.vercel.app
+
+Tool suggestion:
+${toolSuggestion}
+
+User:
 ${message}
 `;
 
@@ -42,85 +112,19 @@ ${message}
 
     const data = await response.json();
 
-    const aiReply =
+    const reply =
       data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-      'I could not understand that request.';
-
-    const lower = message.toLowerCase();
-
-    let tool = null;
-
-    if (
-      lower.includes('image to pdf') ||
-      lower.includes('jpg to pdf') ||
-      lower.includes('png to pdf')
-    ) {
-      tool = {
-        title: 'Image To PDF Converter',
-        url: '/tool/image-to-pdf',
-        description:
-          'Convert JPG PNG and images into PDF online free.'
-      };
-    }
-
-    else if (
-      lower.includes('remove background') ||
-      lower.includes('background remover') ||
-      lower.includes('bg remover')
-    ) {
-      tool = {
-        title: 'Background Remover',
-        url: '/tool/background-remover',
-        description:
-          'Remove image backgrounds instantly online free.'
-      };
-    }
-
-    else if (
-      lower.includes('compress image') ||
-      lower.includes('reduce image size')
-    ) {
-      tool = {
-        title: 'Image Compressor',
-        url: '/tool/image-compressor',
-        description:
-          'Compress images and reduce image size online.'
-      };
-    }
-
-    else if (
-      lower.includes('qr') ||
-      lower.includes('qr code')
-    ) {
-      tool = {
-        title: 'QR Code Generator',
-        url: '/tool/qr-generator',
-        description:
-          'Generate QR codes online for free.'
-      };
-    }
-
-    else if (
-      lower.includes('youtube thumbnail')
-    ) {
-      tool = {
-        title: 'YouTube Thumbnail Downloader',
-        url: '/tool/youtube-thumbnail-downloader',
-        description:
-          'Download YouTube thumbnails in HD quality.'
-      };
-    }
+      'Hello! How can I help you today?';
 
     return res.status(200).json({
-      reply: aiReply,
-      tool
+      reply
     });
 
   } catch (error) {
     console.log(error);
 
     return res.status(500).json({
-      error: 'AI failed'
+      reply: 'AI server error.'
     });
   }
 }
