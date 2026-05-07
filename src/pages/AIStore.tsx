@@ -2,12 +2,15 @@ import { useEffect, useState } from 'react';
 
 import {
   Sparkles,
-  Plus,
   Coins,
-  Lock
+  Plus,
+  Lock,
+  LogIn
 } from 'lucide-react';
 
 import { supabase } from '../lib/supabase';
+
+import { createProfile } from '../lib/createProfile';
 
 export default function AIStore() {
 
@@ -15,21 +18,31 @@ export default function AIStore() {
 
   const [credits, setCredits] = useState(0);
 
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
 
-    loadUser();
+    checkUser();
 
   }, []);
 
-  const loadUser = async () => {
+  const checkUser = async () => {
 
     const {
       data: { session }
     } = await supabase.auth.getSession();
 
-    if (!session?.user) return;
+    if (!session?.user) {
+
+      setLoading(false);
+
+      return;
+
+    }
 
     setUser(session.user);
+
+    await createProfile(session.user);
 
     const { data } = await supabase
       .from('profiles')
@@ -38,8 +51,26 @@ export default function AIStore() {
       .single();
 
     if (data) {
+
       setCredits(data.credits);
+
     }
+
+    setLoading(false);
+
+  };
+
+  const signIn = async () => {
+
+    await supabase.auth.signInWithOAuth({
+
+      provider: 'google',
+
+      options: {
+        redirectTo: window.location.origin + '/ai-store'
+      }
+
+    });
 
   };
 
@@ -61,13 +92,13 @@ export default function AIStore() {
     },
 
     {
-      title: 'YouTube Thumbnail',
-      price: 1
+      title: 'Movie Poster',
+      price: 2
     },
 
     {
-      title: 'Movie Poster',
-      price: 2
+      title: 'YouTube Thumbnail',
+      price: 1
     },
 
     {
@@ -76,6 +107,66 @@ export default function AIStore() {
     }
 
   ];
+
+  if (loading) {
+
+    return (
+
+      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
+
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-violet-600"></div>
+
+      </div>
+
+    );
+
+  }
+
+  // LOGIN SCREEN
+  if (!user) {
+
+    return (
+
+      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center px-4">
+
+        <div className="max-w-md w-full rounded-3xl border border-gray-200 dark:border-zinc-800 p-8 bg-white dark:bg-zinc-900 shadow-xl">
+
+          <div className="w-16 h-16 mx-auto rounded-3xl bg-gradient-to-r from-violet-600 to-indigo-600 flex items-center justify-center">
+
+            <Sparkles className="text-white w-8 h-8" />
+
+          </div>
+
+          <h1 className="mt-6 text-3xl font-bold text-center text-gray-900 dark:text-white">
+
+            Welcome to AI Store
+
+          </h1>
+
+          <p className="mt-3 text-center text-gray-500 dark:text-gray-400">
+
+            Login or signup with Google to access premium AI generations and credits.
+
+          </p>
+
+          <button
+            onClick={signIn}
+            className="mt-8 w-full py-4 rounded-2xl bg-violet-600 hover:bg-violet-700 transition-all text-white font-semibold flex items-center justify-center gap-3"
+          >
+
+            <LogIn className="w-5 h-5" />
+
+            Continue with Google
+
+          </button>
+
+        </div>
+
+      </div>
+
+    );
+
+  }
 
   return (
 
