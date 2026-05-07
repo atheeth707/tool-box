@@ -11,7 +11,8 @@ export default function AI() {
     {
       role: 'assistant',
       text:
-        'Hello 👋 Ask me anything. I can help with questions, ideas, coding, tools, writing and more.'
+        'Hello 👋  
+How can I help you today?'
     }
   ]);
 
