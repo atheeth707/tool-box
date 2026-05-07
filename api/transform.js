@@ -8,13 +8,15 @@ export default async function handler(req, res) {
   const { imageBase64, userId, masterPrompt } = req.body;
 
   try {
-    // 1. Find Profile & Check Credits
+    // 1. Validate User & Credits
     const { data: profile, error: pError } = await supabase.from('profiles').select('credits').eq('id', userId).single();
-    if (pError || !profile) return res.status(404).json({ error: "Profile not found. Log in again." });
+    if (pError || !profile) return res.status(404).json({ error: "Profile not found." });
     if (profile.credits < 1) return res.status(402).json({ error: "Out of credits." });
 
-    // 2. Prepare Stability AI Request
+    // 2. Prepare for Stability AI
+    // We expect imageBase64 to be a clean string (no data:image/png prefix)
     const buffer = Buffer.from(imageBase64, 'base64');
+    
     const formData = new FormData();
     formData.append('init_image', new Blob([buffer], { type: 'image/png' }));
     formData.append('init_image_mode', 'IMAGE_STRENGTH');
@@ -25,27 +27,42 @@ export default async function handler(req, res) {
     formData.append('samples', '1');
     formData.append('steps', '30');
 
-    // 3. Call Stability AI
+    // 3. Request Transformation
     const response = await fetch(
       "https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/image-to-image",
       {
         method: "POST",
-        headers: { Authorization: `Bearer ${process.env.STABILITY_API_KEY}` },
+        headers: { 
+          Authorization: `Bearer ${process.env.STABILITY_API_KEY}`,
+          Accept: "application/json"
+        },
         body: formData,
       }
     );
 
     const resultData = await response.json();
-    if (!response.ok) return res.status(response.status).json({ error: resultData.message });
+    
+    if (!response.ok) {
+      console.error("Stability API Error:", resultData);
+      return res.status(response.status).json({ error: resultData.message || "AI Engine busy." });
+    }
 
-    const finalImage = `data:image/png;base64,${resultData.artifacts[0].base64}`;
+    // 4. Handle Success
+    const base64Output = resultData.artifacts[0].base64;
+    const finalImage = `data:image/png;base64,${base64Output}`;
 
-    // 4. Deduct credit and return
-    const { data: updated } = await supabase.from('profiles').update({ credits: profile.credits - 1 }).eq('id', userId).select('credits').single();
+    // Deduct Credit
+    const { data: updated } = await supabase
+      .from('profiles')
+      .update({ credits: profile.credits - 1 })
+      .eq('id', userId)
+      .select('credits')
+      .single();
 
     return res.status(200).json({ output: finalImage, newCredits: updated.credits });
 
   } catch (err) {
+    console.error("Critical Backend Error:", err);
     return res.status(500).json({ error: "Neural Engine Offline." });
   }
 }
