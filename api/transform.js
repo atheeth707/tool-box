@@ -10,15 +10,33 @@ export default async function handler(req, res) {
 
   const { imageBase64, userId, masterPrompt } = req.body;
 
+  // 1. KEY ROTATOR LOGIC
+  // Collect all keys into an array
+  const keys = [
+    process.env.GEMINI_KEY_1,
+    process.env.GEMINI_KEY_2,
+    process.env.GEMINI_KEY_3,
+    process.env.GEMINI_KEY_4,
+    process.env.GEMINI_KEY_5,
+    process.env.GEMINI_KEY_6,
+    process.env.GEMINI_KEY_7,
+    process.env.GEMINI_KEY_8,
+    process.env.GEMINI_KEY_9,
+    process.env.GEMINI_KEY_10
+    
+  ].filter(key => key); // Only use keys that actually exist
+
+  // Pick a random key from your list
+  const selectedKey = keys[Math.floor(Math.random() * keys.length)];
+
   try {
-    // 1. Database Credit Check
+    // 2. Credit Check
     const { data: profile } = await supabase.from('profiles').select('credits').eq('id', userId).single();
     if (!profile || profile.credits < 1) return res.status(402).json({ error: "Out of credits." });
 
-    // 2. Try Gemini 3.1 Flash Image (Better Quota usually)
-    // If this fails, we can fallback to 2.5
-    const MODEL_ID = "gemini-3.1-flash-image"; 
-    const GOOGLE_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_ID}:generateContent?key=${process.env.GEMINI_API_KEY}`;
+    // 3. API Request using the Rotated Key
+    const MODEL_ID = "gemini-2.5-flash-image"; 
+    const GOOGLE_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_ID}:generateContent?key=${selectedKey}`;
 
     const response = await fetch(GOOGLE_API_URL, {
       method: "POST",
@@ -36,28 +54,27 @@ export default async function handler(req, res) {
 
     const resultData = await response.json();
 
-    // 3. Handle Quota Error specifically
+    // 4. Handle Quota Error (If this key fails, let the user know to try again)
     if (!response.ok) {
-      if (resultData.error?.message?.includes("quota") || response.status === 429) {
-        return res.status(429).json({ 
-          error: "Nexus Free Tier is full. Try again in 60 seconds." 
-        });
+      console.error("Key Error:", resultData.error?.message);
+      if (response.status === 429) {
+        return res.status(429).json({ error: "Key busy. Try clicking again instantly!" });
       }
-      return res.status(response.status).json({ error: "AI Engine busy. Try again." });
+      return res.status(response.status).json({ error: "Neural Engine busy." });
     }
 
-    // 4. Success - Extract Image
+    // 5. Success Logic
     const imagePart = resultData.candidates?.[0]?.content?.parts?.find(p => p.inline_data);
-    if (!imagePart) return res.status(500).json({ error: "AI did not return an image." });
+    if (!imagePart) return res.status(500).json({ error: "AI failed to return image." });
 
     const finalImage = `data:image/png;base64,${imagePart.inline_data.data}`;
 
-    // 5. Update Database
+    // Deduct Credit
     const { data: updated } = await supabase.from('profiles').update({ credits: profile.credits - 1 }).eq('id', userId).select('credits').single();
 
     return res.status(200).json({ output: finalImage, newCredits: updated?.credits });
 
   } catch (err) {
-    return res.status(500).json({ error: "Connection error." });
+    return res.status(500).json({ error: "Connection lost." });
   }
 }
