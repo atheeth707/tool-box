@@ -11,7 +11,7 @@ export default async function handler(req, res) {
   const { imageBase64, userId, masterPrompt } = req.body;
 
   try {
-    // 1. Check Profile & Credits
+    // 1. Credit Check
     const { data: profile, error: pError } = await supabase
       .from('profiles')
       .select('credits')
@@ -21,51 +21,53 @@ export default async function handler(req, res) {
     if (pError || !profile) return res.status(404).json({ error: "Profile not found." });
     if (profile.credits < 1) return res.status(402).json({ error: "Out of credits." });
 
-    // 2. Call Google Gemini / Imagen 
-    // We use the 'imagen-3.0-generate-001' or 'imagen-3.0-fast-generate-001'
-    const GOOGLE_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-fast-generate-001:predict?key=${process.env.GEMINI_API_KEY}`;
+    // 2. Updated Google Gemini Image API Call
+    // Using the 3.1 Flash Image model name (Nano Banana 2)
+    const MODEL_NAME = "gemini-3.1-flash-image"; 
+    const GOOGLE_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${process.env.GEMINI_API_KEY}`;
 
     const response = await fetch(GOOGLE_API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        instances: [
-          {
-            prompt: masterPrompt,
-            image: {
-              bytesBase64Encoded: imageBase64
+        contents: [{
+          parts: [
+            { text: masterPrompt },
+            {
+              inline_data: {
+                mime_type: "image/png",
+                data: imageBase64 // The source image for Image-to-Image
+              }
             }
-          }
-        ],
-        parameters: {
+          ]
+        }],
+        generationConfig: {
           sampleCount: 1,
+          candidateCount: 1
         }
       })
     });
 
     const resultData = await response.json();
 
-    // 3. Handle Google's specific "Busy/Limit" errors
     if (!response.ok) {
-      console.error("Google Studio Error:", resultData);
-      
-      // If the error is a 429 (Too many requests) or 503 (Busy)
-      if (response.status === 429 || response.status === 503) {
-        return res.status(503).json({ 
-          error: "Google servers are currently busy. Please wait 30 seconds and try again." 
-        });
-      }
-      
+      console.error("Google API Error:", resultData);
       return res.status(response.status).json({ 
-        error: resultData.error?.message || "AI Engine currently offline." 
+        error: "Engine compatibility error. Check model name in AI Studio." 
       });
     }
 
-    // 4. Process Success
-    const generatedImage = resultData.predictions[0].bytesBase64Encoded;
-    const finalImage = `data:image/png;base64,${generatedImage}`;
+    // 3. Extract the Generated Image
+    // Gemini 3.1 Flash Image returns the file in the candidates[0].content.parts
+    const generatedPart = resultData.candidates[0].content.parts.find(p => p.inline_data);
+    
+    if (!generatedPart) {
+       return res.status(500).json({ error: "AI failed to return an image." });
+    }
 
-    // 5. Deduct Credit ONLY if image was actually generated
+    const finalImage = `data:image/png;base64,${generatedPart.inline_data.data}`;
+
+    // 4. Deduct Credit
     const { data: updated } = await supabase
       .from('profiles')
       .update({ credits: profile.credits - 1 })
@@ -79,7 +81,7 @@ export default async function handler(req, res) {
     });
 
   } catch (err) {
-    console.error("Critical Google Backend Error:", err);
+    console.error("Critical Backend Error:", err);
     return res.status(500).json({ error: "Neural Engine Offline." });
   }
 }
