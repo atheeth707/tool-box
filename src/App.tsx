@@ -12,10 +12,6 @@ function App() {
     <BrowserRouter>
       <Routes>
         {/* Standalone AI Routes (No Layout wrapper for full-screen feel) */}
-        <Route
-          path="ai-store"
-          element={<AIStore />}
-        />
         
         <Route 
           path="admin-control-panel" 
