@@ -5,7 +5,6 @@ import Category from './pages/Category';
 import ToolPage from './pages/ToolPage';
 
 // Import the new AI pages
-import AIStore from './pages/AIStore';
 import Admin from './pages/Admin';
 
 function App() {
